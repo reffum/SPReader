@@ -13,6 +13,8 @@ class MainWindow : public QMainWindow, Ui::MainWindow
 	Q_OBJECT
 public:
 	explicit MainWindow(QWidget* parent = nullptr);
+private slots:
+	void on_action_Open_triggered(bool checked = false);
 };
 
 #endif //SPREADER_MAINWINDOW_H

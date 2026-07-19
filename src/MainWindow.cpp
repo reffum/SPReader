@@ -2,9 +2,37 @@
 // The application main window
 //
 #include "MainWindow.h"
+#include "settings_keys.h"
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QDebug>
+#include <QSettings>
+#include <QDir>
 
 MainWindow::MainWindow(QWidget *parent):
 	QMainWindow(parent)
 {
 	setupUi(this);
+}
+
+void MainWindow::on_action_Open_triggered(bool checked)
+{
+	QSettings settings;
+	QString lastDir = settings.value(Settings::LastDir, QDir::homePath()).toString();
+
+	QString fileName = QFileDialog::getOpenFileName(
+		this,
+		tr("Open PDF File"),
+		lastDir,
+		tr("PDF Files (*.pdf)")
+	);
+	if (!fileName.isEmpty()) {
+		QFileInfo checkFile(fileName);
+		if (checkFile.exists() && checkFile.isFile()) {
+			qInfo() << "Selected existing PDF file:" << fileName;
+			settings.setValue(Settings::LastDir, checkFile.absolutePath());
+		} else {
+			qWarning() << "File does not exist:" << fileName;
+		}
+	}
 }
