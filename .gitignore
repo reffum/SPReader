@@ -1,5 +1,4 @@
 .idea/
-bin/
-obj/
-.qmake.stash
-Makefile
+cmake-build-debug/
+cmake-build-release/
+
