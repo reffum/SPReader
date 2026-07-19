@@ -11,6 +11,8 @@
 class MainWindow : public QMainWindow, Ui::MainWindow
 {
 	Q_OBJECT
+public:
+	explicit MainWindow(QWidget* parent = nullptr);
 };
 
 #endif //SPREADER_MAINWINDOW_H

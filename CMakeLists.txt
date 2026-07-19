@@ -19,7 +19,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 add_executable(SPReader
     src/main.cpp
-    src/MainWindow.h
+    src/MainWindow.cpp
 )
 
 qt6_add_ui(SPReader
