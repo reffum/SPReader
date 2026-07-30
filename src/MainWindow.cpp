@@ -9,12 +9,16 @@
 #include <QSettings>
 #include <QDir>
 #include <QPdfDocument>
+#include <QPdfView>
 
 MainWindow::MainWindow(QWidget *parent):
 	QMainWindow(parent),
 	m_pdfDocument(new QPdfDocument(this))
 {
 	setupUi(this);
+	auto pdfView = static_cast<QPdfView *>(centralWidget());
+	pdfView->setDocument(m_pdfDocument);
+
 }
 
 void MainWindow::on_action_Open_triggered(bool checked)
