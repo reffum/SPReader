@@ -8,9 +8,13 @@
 
 #include "ui/ui_mainwindow.h"
 
+class QPdfDocument;
+
 class MainWindow : public QMainWindow, Ui::MainWindow
 {
 	Q_OBJECT
+
+	QPdfDocument * m_pdfDocument;
 public:
 	explicit MainWindow(QWidget* parent = nullptr);
 private slots:
