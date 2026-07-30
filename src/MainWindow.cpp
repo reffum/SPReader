@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QPdfDocument>
 #include <QPdfView>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent):
 	QMainWindow(parent),
@@ -49,6 +50,11 @@ void MainWindow::on_action_Open_triggered(bool checked)
 		else
 		{
 			qCritical() << "PDF file load failed:" << r;
+			QMessageBox::critical(
+				this,
+				tr("Error"),
+				tr("File open error")
+			);
 		}
 	}
 }
