@@ -11,7 +11,6 @@
 #include <QPdfDocument>
 #include <QPdfView>
 #include <QMessageBox>
-#include <qpdfview.h>
 
 MainWindow::MainWindow(QWidget *parent):
 	QMainWindow(parent),
