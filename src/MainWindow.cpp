@@ -11,6 +11,7 @@
 #include <QPdfDocument>
 #include <QPdfView>
 #include <QMessageBox>
+#include <qpdfview.h>
 
 MainWindow::MainWindow(QWidget *parent):
 	QMainWindow(parent),
@@ -19,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent):
 	setupUi(this);
 	auto pdfView = static_cast<QPdfView *>(centralWidget());
 	pdfView->setDocument(m_pdfDocument);
-
+	pdfView->setPageMode(QPdfView::PageMode::MultiPage);
 }
 
 void MainWindow::on_action_Open_triggered(bool checked)
