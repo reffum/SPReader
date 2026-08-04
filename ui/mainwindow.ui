@@ -35,6 +35,8 @@
     </property>
     <addaction name="actionPrev_page"/>
     <addaction name="actionNext_page"/>
+    <addaction name="actionZoom_In"/>
+    <addaction name="actionZoom_Out"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -60,6 +62,8 @@
    <addaction name="separator"/>
    <addaction name="actionPrev_page"/>
    <addaction name="actionNext_page"/>
+   <addaction name="actionZoom_In"/>
+   <addaction name="actionZoom_Out"/>
   </widget>
   <widget class="QDockWidget" name="contents_dockWidget">
    <property name="windowTitle">
@@ -94,6 +98,22 @@
    </property>
    <property name="text">
     <string>Next page</string>
+   </property>
+  </action>
+  <action name="actionZoom_In">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::ZoomIn"/>
+   </property>
+   <property name="text">
+    <string>Zoom In</string>
+   </property>
+  </action>
+  <action name="actionZoom_Out">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::ZoomOut"/>
+   </property>
+   <property name="text">
+    <string>Zoom Out</string>
    </property>
   </action>
  </widget>

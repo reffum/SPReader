@@ -17,6 +17,9 @@
 #include "models/PdfContentsModel.h"
 
 constexpr double CONTENTS_DOCKWIDGET_PART = 0.3;
+constexpr double DEFAULT_ZOOM_FACTOR = 1.0;
+constexpr double MAXIMUM_ZOOM_FACTOR = 5.0;
+constexpr double ZOOM_FACTOR_STEP = 0.25;
 
 MainWindow::MainWindow(QWidget *parent):
 	QMainWindow(parent),
@@ -38,6 +41,13 @@ MainWindow::MainWindow(QWidget *parent):
 	m_pageSpinBox = new QSpinBox(this);
 	toolBar->insertWidget(actionNext_page, m_pageSpinBox);
 
+	m_zoomSpinBox = new QDoubleSpinBox(this);
+	toolBar->insertWidget(actionZoom_Out, m_zoomSpinBox);
+	m_zoomSpinBox->setMaximum(MAXIMUM_ZOOM_FACTOR * 100);
+	m_zoomSpinBox->setMinimum(ZOOM_FACTOR_STEP * 100.0);
+	m_zoomSpinBox->setValue(DEFAULT_ZOOM_FACTOR * 100);
+	m_zoomSpinBox->setSingleStep(ZOOM_FACTOR_STEP * 100);
+
 	connect(
 		m_pageSpinBox,
 		SIGNAL(valueChanged(int)),
@@ -50,6 +60,13 @@ MainWindow::MainWindow(QWidget *parent):
 		SIGNAL(currentPageChanged(int)),
 		this,
 		SLOT(on_pageNavigator_currentPageChanged(int))
+	);
+
+	connect(
+		m_zoomSpinBox,
+		SIGNAL(valueChanged(double)),
+		this,
+		SLOT(on_m_zoomSpinBox_valueChanged(double))
 	);
 }
 
@@ -98,7 +115,7 @@ void MainWindow::on_action_Open_triggered(bool checked)
 	}
 }
 
-void MainWindow::on_contents_treeView_navigateToPage(int pageNumber)
+void MainWindow::on_contents_treeView_navigateToPage(int pageNumber) const
 {
 	QSignalBlocker blocker(m_pageSpinBox);
 
@@ -142,8 +159,41 @@ void MainWindow::on_m_pageSpinBox_valueChanged(int value) const
 	navigator->jump(value, {});
 }
 
-void MainWindow::on_pageNavigator_currentPageChanged(int value) const
+void MainWindow::pageNavigator_currentPageChanged(int value) const
 {
 	QSignalBlocker blocker(m_pageSpinBox);
 	m_pageSpinBox->setValue(value);
+}
+
+void MainWindow::on_actionZoom_In_triggered(bool checked) const
+{
+	QSignalBlocker blocker(m_zoomSpinBox);
+
+	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
+	double zoomFactor = pdfView->zoomFactor();
+	zoomFactor += ZOOM_FACTOR_STEP;
+
+	pdfView->setZoomFactor(zoomFactor);
+	m_zoomSpinBox->setValue(zoomFactor * 100);
+}
+
+void MainWindow::on_actionZoom_Out_triggered(bool checked) const
+{
+	QSignalBlocker blocker(m_zoomSpinBox);
+
+	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
+	double zoomFactor = pdfView->zoomFactor();
+	if (zoomFactor - ZOOM_FACTOR_STEP > 0.0)
+	{
+		zoomFactor -= ZOOM_FACTOR_STEP;
+		pdfView->setZoomFactor(zoomFactor);
+		m_zoomSpinBox->setValue(zoomFactor * 100);
+	}
+}
+
+void MainWindow::on_m_zoomSpinBox_valueChanged(double) const
+{
+	double zoomFactor = m_zoomSpinBox->value() / 100.0;
+	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
+	pdfView->setZoomFactor(zoomFactor);
 }
