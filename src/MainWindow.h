@@ -10,6 +10,7 @@
 
 class QPdfDocument;
 class QSpinBox;
+class QDoubleSpinBox;
 
 class MainWindow : public QMainWindow, Ui::MainWindow
 {
@@ -17,15 +18,20 @@ class MainWindow : public QMainWindow, Ui::MainWindow
 
 	QPdfDocument * m_pdfDocument;
 	QSpinBox * m_pageSpinBox;
+	QDoubleSpinBox * m_zoomSpinBox;
 public:
 	explicit MainWindow(QWidget* parent = nullptr);
 private slots:
 	void on_action_Open_triggered(bool checked = false);
-	void on_contents_treeView_navigateToPage(int pageNumber);
+	void on_contents_treeView_navigateToPage(int pageNumber) const;
 	void on_actionNext_page_triggered(bool checked = false) const;
 	void on_actionPrev_page_triggered(bool checked = false) const;
 	void on_m_pageSpinBox_valueChanged(int value) const;
-	void on_pageNavigator_currentPageChanged(int value) const;
+	void on_actionZoom_In_triggered(bool checked = false) const;
+	void on_actionZoom_Out_triggered(bool checked = false) const;
+	void on_m_zoomSpinBox_valueChanged(double) const;
+
+	void pageNavigator_currentPageChanged(int value) const;
 };
 
 #endif //SPREADER_MAINWINDOW_H
