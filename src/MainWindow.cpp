@@ -12,14 +12,25 @@
 #include <QPdfView>
 #include <QMessageBox>
 
+#include "models/PdfContentsModel.h"
+
+constexpr double CONTENTS_DOCKWIDGET_PART = 0.3;
+
 MainWindow::MainWindow(QWidget *parent):
 	QMainWindow(parent),
 	m_pdfDocument(new QPdfDocument(this))
 {
 	setupUi(this);
-	auto pdfView = static_cast<QPdfView *>(centralWidget());
+	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
 	pdfView->setDocument(m_pdfDocument);
 	pdfView->setPageMode(QPdfView::PageMode::MultiPage);
+
+	int contents_dockWidgetSize = static_cast<int>(width() * CONTENTS_DOCKWIDGET_PART);
+	resizeDocks(
+		{ contents_dockWidget } ,
+		{ contents_dockWidgetSize } ,
+		Qt::Horizontal
+		);
 }
 
 void MainWindow::on_action_Open_triggered(bool checked)
@@ -56,5 +67,10 @@ void MainWindow::on_action_Open_triggered(bool checked)
 				tr("File open error")
 			);
 		}
+
+		// Load the contents model in contents tree view
+		auto * contentsModel = new PdfContentsModel(this);
+		contentsModel->setDocument(m_pdfDocument);
+		contents_treeView->setModel(contentsModel);
 	}
 }

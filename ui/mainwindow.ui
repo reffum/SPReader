@@ -44,6 +44,17 @@
    </attribute>
    <addaction name="action_Open"/>
   </widget>
+  <widget class="QDockWidget" name="contents_dockWidget">
+   <property name="windowTitle">
+    <string>Contents</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="ContentsTreeView" name="contents_treeView">
+    <layout class="QVBoxLayout" name="verticalLayout"/>
+   </widget>
+  </widget>
   <action name="action_Open">
    <property name="icon">
     <iconset theme="document-open"/>
@@ -58,6 +69,12 @@
    <class>QPdfView</class>
    <extends>QWidget</extends>
    <header location="global">qpdfview.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ContentsTreeView</class>
+   <extends>QWidget</extends>
+   <header>widgets/ContentsTreeView.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
