@@ -52,3 +52,12 @@ QVariant PdfContentsModel::data(
 	}
 	return QPdfBookmarkModel::data(index, role);
 }
+
+int PdfContentsModel::getPageNumber(const QModelIndex & index) const
+{
+	QVariant value = QPdfBookmarkModel::data(
+		index,
+		static_cast<int>(QPdfBookmarkModel::Role::Page)
+	);
+	return value.toInt();
+}
