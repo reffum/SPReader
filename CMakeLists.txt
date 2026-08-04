@@ -20,6 +20,10 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 add_executable(SPReader
     src/main.cpp
     src/MainWindow.cpp
+        src/models/PdfContentsModel.h
+        src/models/PdfContentsModel.cpp
+        src/widgets/ContentsTreeView.cpp
+        src/widgets/ContentsTreeView.h
 )
 
 qt6_add_ui(SPReader
@@ -33,3 +37,5 @@ target_link_libraries(SPReader PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::PdfWidgets
 )
+
+target_include_directories(SPReader PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
