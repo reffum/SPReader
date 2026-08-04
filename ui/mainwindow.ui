@@ -29,7 +29,21 @@
     </property>
     <addaction name="action_Open"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionPrev_page"/>
+    <addaction name="actionNext_page"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+   </widget>
    <addaction name="menu_File"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -43,6 +57,9 @@
     <bool>false</bool>
    </attribute>
    <addaction name="action_Open"/>
+   <addaction name="separator"/>
+   <addaction name="actionPrev_page"/>
+   <addaction name="actionNext_page"/>
   </widget>
   <widget class="QDockWidget" name="contents_dockWidget">
    <property name="windowTitle">
@@ -61,6 +78,22 @@
    </property>
    <property name="text">
     <string>&amp;Open</string>
+   </property>
+  </action>
+  <action name="actionPrev_page">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::GoPrevious"/>
+   </property>
+   <property name="text">
+    <string>Prev page</string>
+   </property>
+  </action>
+  <action name="actionNext_page">
+   <property name="icon">
+    <iconset theme="QIcon::ThemeIcon::GoNext"/>
+   </property>
+   <property name="text">
+    <string>Next page</string>
    </property>
   </action>
  </widget>

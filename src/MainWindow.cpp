@@ -10,7 +10,9 @@
 #include <QDir>
 #include <QPdfDocument>
 #include <QPdfView>
+#include <QPdfPageNavigator>
 #include <QMessageBox>
+#include <QSpinBox>
 
 #include "models/PdfContentsModel.h"
 
@@ -21,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent):
 	m_pdfDocument(new QPdfDocument(this))
 {
 	setupUi(this);
+
 	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
 	pdfView->setDocument(m_pdfDocument);
 	pdfView->setPageMode(QPdfView::PageMode::MultiPage);
@@ -31,6 +34,23 @@ MainWindow::MainWindow(QWidget *parent):
 		{ contents_dockWidgetSize } ,
 		Qt::Horizontal
 		);
+
+	m_pageSpinBox = new QSpinBox(this);
+	toolBar->insertWidget(actionNext_page, m_pageSpinBox);
+
+	connect(
+		m_pageSpinBox,
+		SIGNAL(valueChanged(int)),
+		this,
+		SLOT(on_m_pageSpinBox_valueChanged(int))
+	);
+
+	connect(
+		pdfView->pageNavigator(),
+		SIGNAL(currentPageChanged(int)),
+		this,
+		SLOT(on_pageNavigator_currentPageChanged(int))
+	);
 }
 
 void MainWindow::on_action_Open_triggered(bool checked)
@@ -72,5 +92,58 @@ void MainWindow::on_action_Open_triggered(bool checked)
 		auto * contentsModel = new PdfContentsModel(this);
 		contentsModel->setDocument(m_pdfDocument);
 		contents_treeView->setModel(contentsModel);
+
+		int pageCount = m_pdfDocument->pageCount();
+		m_pageSpinBox->setMaximum(pageCount);
 	}
+}
+
+void MainWindow::on_contents_treeView_navigateToPage(int pageNumber)
+{
+	QSignalBlocker blocker(m_pageSpinBox);
+
+	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
+	pdfView->pageNavigator()->jump(pageNumber, {});
+
+	m_pageSpinBox->setValue(pageNumber);
+}
+
+void MainWindow::on_actionNext_page_triggered(bool checked) const
+{
+	QSignalBlocker blocker(m_pageSpinBox);
+
+	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
+
+	QPdfPageNavigator * navigator = pdfView->pageNavigator();
+	int nextPage = navigator->currentPage() + 1;
+	navigator->jump(nextPage, {});
+	m_pageSpinBox->setValue(nextPage);
+}
+
+void MainWindow::on_actionPrev_page_triggered(bool checked) const
+{
+	QSignalBlocker blocker(m_pageSpinBox);
+
+	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
+
+	QPdfPageNavigator * navigator = pdfView->pageNavigator();
+	int prevPage = navigator->currentPage() - 1;
+	if (prevPage >= 0)
+	{
+		navigator->jump(prevPage, {});
+		m_pageSpinBox->setValue(prevPage);
+	}
+}
+
+void MainWindow::on_m_pageSpinBox_valueChanged(int value) const
+{
+	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
+	QPdfPageNavigator * navigator = pdfView->pageNavigator();
+	navigator->jump(value, {});
+}
+
+void MainWindow::on_pageNavigator_currentPageChanged(int value) const
+{
+	QSignalBlocker blocker(m_pageSpinBox);
+	m_pageSpinBox->setValue(value);
 }

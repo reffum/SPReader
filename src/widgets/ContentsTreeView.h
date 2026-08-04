@@ -13,6 +13,12 @@ class ContentsTreeView: public QTreeView
 public:
 	explicit ContentsTreeView(QWidget* parent = nullptr);
 	void setModel(QAbstractItemModel* model) override;
+
+signals:
+	void navigateToPage(int pageNumber);
+
+private slots:
+	void onItemDoubleClicked(const QModelIndex &index);
 };
 
 
