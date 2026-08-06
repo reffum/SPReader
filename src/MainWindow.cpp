@@ -22,14 +22,9 @@ constexpr double MAXIMUM_ZOOM_FACTOR = 5.0;
 constexpr double ZOOM_FACTOR_STEP = 0.25;
 
 MainWindow::MainWindow(QWidget *parent):
-	QMainWindow(parent),
-	m_pdfDocument(new QPdfDocument(this))
+	QMainWindow(parent)
 {
 	setupUi(this);
-
-	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
-	pdfView->setDocument(m_pdfDocument);
-	pdfView->setPageMode(QPdfView::PageMode::MultiPage);
 
 	int contents_dockWidgetSize = static_cast<int>(width() * CONTENTS_DOCKWIDGET_PART);
 	resizeDocks(
@@ -56,18 +51,39 @@ MainWindow::MainWindow(QWidget *parent):
 	);
 
 	connect(
-		pdfView->pageNavigator(),
-		SIGNAL(currentPageChanged(int)),
-		this,
-		SLOT(on_pageNavigator_currentPageChanged(int))
-	);
-
-	connect(
 		m_zoomSpinBox,
 		SIGNAL(valueChanged(double)),
 		this,
 		SLOT(on_m_zoomSpinBox_valueChanged(double))
 	);
+
+	centralwidget->setElideMode(Qt::ElideRight);
+
+	centralwidget->setStyleSheet(
+		"QTabBar::tab { max-width: " +
+		QString::number(centralwidget->width() / 3) +
+		"px; }"
+	);
+}
+
+QPdfView * MainWindow::currentPdfView() const
+{
+	auto currentWidget = centralwidget->currentWidget();
+	if (currentWidget == nullptr)
+	{
+		return nullptr;
+	}
+	return dynamic_cast<QPdfView *>(currentWidget);
+}
+
+QPdfDocument * MainWindow::currentPdfDocument() const
+{
+	QPdfView * pdfView = currentPdfView();
+	if (pdfView == nullptr)
+	{
+		return nullptr;
+	}
+	return pdfView->document();
 }
 
 void MainWindow::on_action_Open_triggered(bool checked)
@@ -90,7 +106,8 @@ void MainWindow::on_action_Open_triggered(bool checked)
 			qWarning() << "File does not exist:" << fileName;
 		}
 
-		QPdfDocument::Error r = m_pdfDocument->load(fileName);
+		auto * pdfDocument = new QPdfDocument(this);
+		QPdfDocument::Error r = pdfDocument->load(fileName);
 		if (r == QPdfDocument::Error::None)
 		{
 			qInfo() << "PDF file loaded:" << fileName;
@@ -103,23 +120,98 @@ void MainWindow::on_action_Open_triggered(bool checked)
 				tr("Error"),
 				tr("File open error")
 			);
+			delete pdfDocument;
+			return;
 		}
 
-		// Load the contents model in contents tree view
-		auto * contentsModel = new PdfContentsModel(this);
-		contentsModel->setDocument(m_pdfDocument);
-		contents_treeView->setModel(contentsModel);
+		auto * pdfView = new QPdfView(this);
+		pdfView->setDocument(pdfDocument);
+		pdfView->setPageMode(QPdfView::PageMode::MultiPage);
 
-		int pageCount = m_pdfDocument->pageCount();
-		m_pageSpinBox->setMaximum(pageCount);
+		connect(
+			pdfView->pageNavigator(),
+			SIGNAL(currentPageChanged(int)),
+			this,
+			SLOT(pageNavigator_currentPageChanged(int))
+		);
+
+		int tabIndex = centralwidget->addTab(
+			pdfView,
+			checkFile.fileName()
+		);
+		centralwidget->setTabToolTip(
+			tabIndex,
+			checkFile.fileName()
+		);
+		centralwidget->setCurrentIndex(tabIndex);
 	}
+}
+
+void MainWindow::on_centralwidget_currentChanged(int index)
+{
+	QPdfView * pdfView = currentPdfView();
+	QPdfDocument * pdfDocument = currentPdfDocument();
+
+	if (pdfView == nullptr || pdfDocument == nullptr)
+	{
+		contents_treeView->setModel(nullptr);
+		m_pageSpinBox->setMaximum(0);
+		m_pageSpinBox->setValue(0);
+		return;
+	}
+
+	// Load the contents model in contents tree view
+	auto * contentsModel = new PdfContentsModel(this);
+	contentsModel->setDocument(pdfDocument);
+	contents_treeView->setModel(contentsModel);
+
+	int pageCount = pdfDocument->pageCount();
+	m_pageSpinBox->setMaximum(pageCount);
+
+	int currentPage = pdfView->pageNavigator()->currentPage();
+	{
+		QSignalBlocker blocker(m_pageSpinBox);
+		m_pageSpinBox->setValue(currentPage);
+	}
+
+	{
+		QSignalBlocker blocker(m_zoomSpinBox);
+		m_zoomSpinBox->setValue(pdfView->zoomFactor() * 100);
+	}
+}
+
+void MainWindow::on_centralwidget_tabCloseRequested(int index)
+{
+	QWidget * widget = centralwidget->widget(index);
+	if (widget == nullptr)
+	{
+		return;
+	}
+
+	auto * pdfView = dynamic_cast<QPdfView *>(widget);
+	if (pdfView != nullptr)
+	{
+		QPdfDocument * pdfDocument = pdfView->document();
+		if (pdfDocument != nullptr)
+		{
+			delete pdfDocument;
+		}
+	}
+
+	centralwidget->removeTab(index);
+	delete widget;
 }
 
 void MainWindow::on_contents_treeView_navigateToPage(int pageNumber) const
 {
+	QPdfView * pdfView = currentPdfView();
+	if (pdfView == nullptr)
+	{
+		return;
+	}
+
 	QSignalBlocker blocker(m_pageSpinBox);
 
-	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
 	pdfView->pageNavigator()->jump(pageNumber, {});
 
 	m_pageSpinBox->setValue(pageNumber);
@@ -127,9 +219,13 @@ void MainWindow::on_contents_treeView_navigateToPage(int pageNumber) const
 
 void MainWindow::on_actionNext_page_triggered(bool checked) const
 {
-	QSignalBlocker blocker(m_pageSpinBox);
+	QPdfView * pdfView = currentPdfView();
+	if (pdfView == nullptr)
+	{
+		return;
+	}
 
-	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
+	QSignalBlocker blocker(m_pageSpinBox);
 
 	QPdfPageNavigator * navigator = pdfView->pageNavigator();
 	int nextPage = navigator->currentPage() + 1;
@@ -139,9 +235,13 @@ void MainWindow::on_actionNext_page_triggered(bool checked) const
 
 void MainWindow::on_actionPrev_page_triggered(bool checked) const
 {
-	QSignalBlocker blocker(m_pageSpinBox);
+	QPdfView * pdfView = currentPdfView();
+	if (pdfView == nullptr)
+	{
+		return;
+	}
 
-	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
+	QSignalBlocker blocker(m_pageSpinBox);
 
 	QPdfPageNavigator * navigator = pdfView->pageNavigator();
 	int prevPage = navigator->currentPage() - 1;
@@ -154,22 +254,37 @@ void MainWindow::on_actionPrev_page_triggered(bool checked) const
 
 void MainWindow::on_m_pageSpinBox_valueChanged(int value) const
 {
-	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
+	QPdfView * pdfView = currentPdfView();
+	if (pdfView == nullptr)
+	{
+		return;
+	}
 	QPdfPageNavigator * navigator = pdfView->pageNavigator();
 	navigator->jump(value, {});
 }
 
 void MainWindow::pageNavigator_currentPageChanged(int value) const
 {
-	QSignalBlocker blocker(m_pageSpinBox);
-	m_pageSpinBox->setValue(value);
+	// Only update page spinbox if the active tab triggered the signal
+	auto * senderNavigator = dynamic_cast<QPdfPageNavigator *>(sender());
+	QPdfView * pdfView = currentPdfView();
+	if (pdfView != nullptr && senderNavigator == pdfView->pageNavigator())
+	{
+		QSignalBlocker blocker(m_pageSpinBox);
+		m_pageSpinBox->setValue(value);
+	}
 }
 
 void MainWindow::on_actionZoom_In_triggered(bool checked) const
 {
+	QPdfView * pdfView = currentPdfView();
+	if (pdfView == nullptr)
+	{
+		return;
+	}
+
 	QSignalBlocker blocker(m_zoomSpinBox);
 
-	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
 	double zoomFactor = pdfView->zoomFactor();
 	zoomFactor += ZOOM_FACTOR_STEP;
 
@@ -179,9 +294,14 @@ void MainWindow::on_actionZoom_In_triggered(bool checked) const
 
 void MainWindow::on_actionZoom_Out_triggered(bool checked) const
 {
+	QPdfView * pdfView = currentPdfView();
+	if (pdfView == nullptr)
+	{
+		return;
+	}
+
 	QSignalBlocker blocker(m_zoomSpinBox);
 
-	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
 	double zoomFactor = pdfView->zoomFactor();
 	if (zoomFactor - ZOOM_FACTOR_STEP > 0.0)
 	{
@@ -193,7 +313,21 @@ void MainWindow::on_actionZoom_Out_triggered(bool checked) const
 
 void MainWindow::on_m_zoomSpinBox_valueChanged(double) const
 {
+	QPdfView * pdfView = currentPdfView();
+	if (pdfView == nullptr)
+	{
+		return;
+	}
 	double zoomFactor = m_zoomSpinBox->value() / 100.0;
-	auto pdfView = dynamic_cast<QPdfView *>(centralWidget());
 	pdfView->setZoomFactor(zoomFactor);
+}
+
+void MainWindow::resizeEvent(QResizeEvent * event)
+{
+	QMainWindow::resizeEvent(event);
+	centralwidget->setStyleSheet(
+		"QTabBar::tab { max-width: " +
+		QString::number(centralwidget->width() / 4) +
+		"px; }"
+	);
 }

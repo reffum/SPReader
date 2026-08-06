@@ -13,7 +13,11 @@
   <property name="windowTitle">
    <string>SPReader</string>
   </property>
-  <widget class="QPdfView" name="centralwidget"/>
+  <widget class="QTabWidget" name="centralwidget">
+   <property name="tabsClosable">
+    <bool>true</bool>
+   </property>
+  </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>

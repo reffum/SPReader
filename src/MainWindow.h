@@ -9,6 +9,7 @@
 #include "ui/ui_mainwindow.h"
 
 class QPdfDocument;
+class QPdfView;
 class QSpinBox;
 class QDoubleSpinBox;
 
@@ -16,9 +17,11 @@ class MainWindow : public QMainWindow, Ui::MainWindow
 {
 	Q_OBJECT
 
-	QPdfDocument * m_pdfDocument;
 	QSpinBox * m_pageSpinBox;
 	QDoubleSpinBox * m_zoomSpinBox;
+
+	QPdfView * currentPdfView() const;
+	QPdfDocument * currentPdfDocument() const;
 public:
 	explicit MainWindow(QWidget* parent = nullptr);
 private slots:
@@ -32,6 +35,10 @@ private slots:
 	void on_m_zoomSpinBox_valueChanged(double) const;
 
 	void pageNavigator_currentPageChanged(int value) const;
+	void on_centralwidget_currentChanged(int index);
+	void on_centralwidget_tabCloseRequested(int index);
+protected:
+	void resizeEvent(QResizeEvent * event) override;
 };
 
 #endif //SPREADER_MAINWINDOW_H
