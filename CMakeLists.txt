@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(SPReader VERSION 1.0 LANGUAGES CXX)
+project(SPReader VERSION 0.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -36,6 +36,10 @@ target_link_libraries(SPReader PRIVATE
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::PdfWidgets
+)
+
+target_compile_definitions(SPReader PRIVATE
+    PROJECT_VERSION="${PROJECT_VERSION}"
 )
 
 target_include_directories(SPReader PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)

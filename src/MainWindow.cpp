@@ -86,6 +86,18 @@ QPdfDocument * MainWindow::currentPdfDocument() const
 	return pdfView->document();
 }
 
+void MainWindow::on_actionAbout_triggered()
+{
+	QMessageBox::about(
+		this,
+		tr("About SPReader"),
+		tr("SPReader\n"
+		   "PDF/DJVU/FB file reader.\n\n"
+		   "Version: ") +
+		QString(PROJECT_VERSION)
+	);
+}
+
 void MainWindow::on_action_Open_triggered(bool checked)
 {
 	QSettings settings;

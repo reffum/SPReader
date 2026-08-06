@@ -26,6 +26,7 @@ public:
 	explicit MainWindow(QWidget* parent = nullptr);
 private slots:
 	void on_action_Open_triggered(bool checked = false);
+	void on_actionAbout_triggered();
 	void on_contents_treeView_navigateToPage(int pageNumber) const;
 	void on_actionNext_page_triggered(bool checked = false) const;
 	void on_actionPrev_page_triggered(bool checked = false) const;

@@ -42,15 +42,22 @@
     <addaction name="actionZoom_In"/>
     <addaction name="actionZoom_Out"/>
    </widget>
-   <widget class="QMenu" name="menuView">
-    <property name="title">
-     <string>View</string>
-    </property>
+    <widget class="QMenu" name="menuView">
+     <property name="title">
+      <string>View</string>
+     </property>
+    </widget>
+    <widget class="QMenu" name="menuHelp">
+     <property name="title">
+      <string>Help</string>
+     </property>
+     <addaction name="actionAbout"/>
+    </widget>
+    <addaction name="menu_File"/>
+    <addaction name="menuEdit"/>
+    <addaction name="menuView"/>
+    <addaction name="menuHelp"/>
    </widget>
-   <addaction name="menu_File"/>
-   <addaction name="menuEdit"/>
-   <addaction name="menuView"/>
-  </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
@@ -118,6 +125,11 @@
    </property>
    <property name="text">
     <string>Zoom Out</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
    </property>
   </action>
  </widget>
