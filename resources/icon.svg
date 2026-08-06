@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Soft rounded background -->
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="#2C3E50" />
+  
+  <!-- Book pages/spine shadows -->
+  <path d="M12 14 H52 V48 H12 Z" fill="#ECF0F1" />
+  
+  <!-- Book cover/spine -->
+  <path d="M10 12 H54 V16 H10 Z" fill="#E74C3C" />
+  <path d="M10 12 V52 H14 V12 Z" fill="#C0392B" />
+  <path d="M10 48 H54 V52 H10 Z" fill="#E74C3C" />
+  
+  <!-- Styled Bookmark -->
+  <path d="M38 12 V32 L43 28 L48 32 V12 Z" fill="#F1C40F" />
+  
+  <!-- Book horizontal lines representing text / lines on pages -->
+  <line x1="18" y1="22" x2="34" y2="22" stroke="#BDC3C7" stroke-width="2" stroke-linecap="round" />
+  <line x1="18" y1="28" x2="34" y2="28" stroke="#BDC3C7" stroke-width="2" stroke-linecap="round" />
+  <line x1="18" y1="34" x2="46" y2="34" stroke="#BDC3C7" stroke-width="2" stroke-linecap="round" />
+  <line x1="18" y1="40" x2="46" y2="40" stroke="#BDC3C7" stroke-width="2" stroke-linecap="round" />
+</svg>

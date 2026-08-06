@@ -13,6 +13,7 @@
 #include <QPdfPageNavigator>
 #include <QMessageBox>
 #include <QSpinBox>
+#include <QIcon>
 
 #include "models/PdfContentsModel.h"
 
@@ -25,6 +26,10 @@ MainWindow::MainWindow(QWidget *parent):
 	QMainWindow(parent)
 {
 	setupUi(this);
+
+	setWindowIcon(
+		QIcon(":/resources/icon.svg")
+	);
 
 	int contents_dockWidgetSize = static_cast<int>(width() * CONTENTS_DOCKWIDGET_PART);
 	resizeDocks(

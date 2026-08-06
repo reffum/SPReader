@@ -24,6 +24,7 @@ add_executable(SPReader
         src/models/PdfContentsModel.cpp
         src/widgets/ContentsTreeView.cpp
         src/widgets/ContentsTreeView.h
+    resources.qrc
 )
 
 qt6_add_ui(SPReader
@@ -43,3 +44,7 @@ target_compile_definitions(SPReader PRIVATE
 )
 
 target_include_directories(SPReader PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+install(TARGETS SPReader DESTINATION bin)
+install(FILES resources/spreader.desktop DESTINATION share/applications)
+install(FILES resources/icon.svg DESTINATION share/icons/hicolor/scalable/apps RENAME spreader.svg)

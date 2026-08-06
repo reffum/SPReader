@@ -1,0 +1,24 @@
+# Maintainer: Oleg <oleg@example.com>
+pkgname=spreader
+pkgver=0.2.2
+pkgrel=1
+pkgdesc="PDF/DJVU/FB file reader"
+arch=('x86_64')
+url="https://github.com/reffum/SPReader"
+license=('GPL3')
+depends=('qt6-base' 'qt6-webengine')
+makedepends=('cmake' 'git')
+options=('strip')
+source=("${pkgname}::git+https://github.com/reffum/SPReader.git")
+md5sums=('SKIP')
+
+build() {
+  cmake -B build -S "$srcdir/spreader" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+}
+
+package() {
+  cmake --install build --prefix "$pkgdir/usr"
+}

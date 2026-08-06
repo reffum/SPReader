@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=SPReader
+Comment=PDF/DJVU/FB file reader
+Exec=SPReader %f
+Icon=spreader
+Terminal=false
+Categories=Office;Viewer;Qt;
+MimeType=application/pdf;
