@@ -23,6 +23,8 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 add_executable(SPReader
     src/main.cpp
     src/MainWindow.cpp
+    src/SettingsManager.h
+    src/SettingsManager.cpp
         src/models/PdfContentsModel.h
         src/models/PdfContentsModel.cpp
         src/data/DjvuDocument.h

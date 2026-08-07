@@ -15,7 +15,9 @@ class DjvuView;
 class QSpinBox;
 class QDoubleSpinBox;
 
-class MainWindow : public QMainWindow, Ui::MainWindow
+class MainWindow :
+	public QMainWindow,
+	Ui::MainWindow
 {
 	Q_OBJECT
 
@@ -34,6 +36,13 @@ class MainWindow : public QMainWindow, Ui::MainWindow
 	void addRecentFile(
 		const QString & fileName
 	);
+	void saveDocumentState(
+		QWidget * widget
+	) const;
+	void restoreDocumentState(
+		const QString & fileName,
+		QWidget * widget
+	) const;
 public:
 	explicit MainWindow(
 		QWidget * parent = nullptr
@@ -84,6 +93,7 @@ private slots:
 
 protected:
 	void resizeEvent(QResizeEvent * event) override;
+	void closeEvent(QCloseEvent * event) override;
 };
 
 #endif //SPREADER_MAINWINDOW_H
