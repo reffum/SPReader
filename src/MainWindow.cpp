@@ -24,8 +24,11 @@ constexpr double CONTENTS_DOCKWIDGET_PART = 0.3;
 constexpr double DEFAULT_ZOOM_FACTOR = 1.0;
 constexpr double MAXIMUM_ZOOM_FACTOR = 5.0;
 constexpr double ZOOM_FACTOR_STEP = 0.25;
+constexpr int MAX_RECENT_FILES = 10;
 
-MainWindow::MainWindow(QWidget *parent):
+MainWindow::MainWindow(
+	QWidget * parent
+):
 	QMainWindow(parent)
 {
 	setupUi(this);
@@ -33,6 +36,8 @@ MainWindow::MainWindow(QWidget *parent):
 	setWindowIcon(
 		QIcon(":/resources/icon.svg")
 	);
+
+	updateRecentFilesMenu();
 
 	int contents_dockWidgetSize = static_cast<int>(width() * CONTENTS_DOCKWIDGET_PART);
 	resizeDocks(
@@ -126,10 +131,15 @@ void MainWindow::on_actionAbout_triggered()
 	);
 }
 
-void MainWindow::on_action_Open_triggered(bool checked)
+void MainWindow::on_action_Open_triggered(
+	bool checked
+)
 {
 	QSettings settings;
-	QString lastDir = settings.value(Settings::LastDir, QDir::homePath()).toString();
+	QString lastDir = settings.value(
+		Settings::LastDir,
+		QDir::homePath()
+	).toString();
 
 	QString fileName = QFileDialog::getOpenFileName(
 		this,
@@ -137,97 +147,219 @@ void MainWindow::on_action_Open_triggered(bool checked)
 		lastDir,
 		tr("Supported Files (*.pdf *.djvu *.djv);;PDF Files (*.pdf);;DjVu Files (*.djvu *.djv)")
 	);
-	if (!fileName.isEmpty()) {
-		QFileInfo checkFile(fileName);
-		if (!checkFile.exists() || !checkFile.isFile()) {
-			qWarning() << "File does not exist:" << fileName;
-			return;
-		}
+	if (!fileName.isEmpty())
+	{
+		openFile(fileName);
+	}
+}
 
-		settings.setValue(Settings::LastDir, checkFile.absolutePath());
+void MainWindow::openFile(
+	const QString & fileName
+)
+{
+	QFileInfo checkFile(fileName);
+	if (!checkFile.exists() || !checkFile.isFile())
+	{
+		qWarning() << "File does not exist:" << fileName;
+		QMessageBox::critical(
+			this,
+			tr("Error"),
+			tr("File does not exist: %1").arg(fileName)
+		);
+		return;
+	}
 
-		QString suffix = checkFile.suffix().toLower();
-		if (suffix == "djvu" || suffix == "djv")
+	QSettings settings;
+	settings.setValue(
+		Settings::LastDir,
+		checkFile.absolutePath()
+	);
+
+	addRecentFile(checkFile.absoluteFilePath());
+
+	QString suffix = checkFile.suffix().toLower();
+	if (suffix == "djvu" || suffix == "djv")
+	{
+		auto * djvuDocument = new DjvuDocument(this);
+		if (djvuDocument->load(fileName))
 		{
-			auto * djvuDocument = new DjvuDocument(this);
-			if (djvuDocument->load(fileName))
-			{
-				qInfo() << "DjVu file loaded:" << fileName;
-			}
-			else
-			{
-				qCritical() << "DjVu file load failed:" << fileName;
-				QMessageBox::critical(
-					this,
-					tr("Error"),
-					tr("File open error")
-				);
-				delete djvuDocument;
-				return;
-			}
-
-			auto * djvuView = new DjvuView(this);
-			djvuView->setDocument(djvuDocument);
-
-			connect(
-				djvuView,
-				&DjvuView::currentPageChanged,
-				this,
-				&MainWindow::pageNavigator_currentPageChanged
-			);
-
-			int tabIndex = centralwidget->addTab(
-				djvuView,
-				checkFile.fileName()
-			);
-			centralwidget->setTabToolTip(
-				tabIndex,
-				checkFile.fileName()
-			);
-			centralwidget->setCurrentIndex(tabIndex);
+			qInfo() << "DjVu file loaded:" << fileName;
 		}
 		else
 		{
-			auto * pdfDocument = new QPdfDocument(this);
-			QPdfDocument::Error r = pdfDocument->load(fileName);
-			if (r == QPdfDocument::Error::None)
-			{
-				qInfo() << "PDF file loaded:" << fileName;
-			}
-			else
-			{
-				qCritical() << "PDF file load failed:" << r;
-				QMessageBox::critical(
-					this,
-					tr("Error"),
-					tr("File open error")
-				);
-				delete pdfDocument;
-				return;
-			}
-
-			// ReSharper disable once CppDFAMemoryLeak
-			auto * pdfView = new QPdfView(this);
-			pdfView->setDocument(pdfDocument);
-			pdfView->setPageMode(QPdfView::PageMode::MultiPage);
-
-			connect(
-				pdfView->pageNavigator(),
-				SIGNAL(currentPageChanged(int)),
+			qCritical() << "DjVu file load failed:" << fileName;
+			QMessageBox::critical(
 				this,
-				SLOT(pageNavigator_currentPageChanged(int))
+				tr("Error"),
+				tr("File open error")
 			);
-
-			int tabIndex = centralwidget->addTab(
-				pdfView,
-				checkFile.fileName()
-			);
-			centralwidget->setTabToolTip(
-				tabIndex,
-				checkFile.fileName()
-			);
-			centralwidget->setCurrentIndex(tabIndex);
+			delete djvuDocument;
+			return;
 		}
+
+		auto * djvuView = new DjvuView(this);
+		djvuView->setDocument(djvuDocument);
+
+		connect(
+			djvuView,
+			&DjvuView::currentPageChanged,
+			this,
+			&MainWindow::pageNavigator_currentPageChanged
+		);
+
+		int tabIndex = centralwidget->addTab(
+			djvuView,
+			checkFile.fileName()
+		);
+		centralwidget->setTabToolTip(
+			tabIndex,
+			checkFile.fileName()
+		);
+		centralwidget->setCurrentIndex(tabIndex);
+	}
+	else
+	{
+		auto * pdfDocument = new QPdfDocument(this);
+		QPdfDocument::Error r = pdfDocument->load(fileName);
+		if (r == QPdfDocument::Error::None)
+		{
+			qInfo() << "PDF file loaded:" << fileName;
+		}
+		else
+		{
+			qCritical() << "PDF file load failed:" << r;
+			QMessageBox::critical(
+				this,
+				tr("Error"),
+				tr("File open error")
+			);
+			delete pdfDocument;
+			return;
+		}
+
+		// ReSharper disable once CppDFAMemoryLeak
+		auto * pdfView = new QPdfView(this);
+		pdfView->setDocument(pdfDocument);
+		pdfView->setPageMode(QPdfView::PageMode::MultiPage);
+
+		connect(
+			pdfView->pageNavigator(),
+			SIGNAL(currentPageChanged(int)),
+			this,
+			SLOT(pageNavigator_currentPageChanged(int))
+		);
+
+		int tabIndex = centralwidget->addTab(
+			pdfView,
+			checkFile.fileName()
+		);
+		centralwidget->setTabToolTip(
+			tabIndex,
+			checkFile.fileName()
+		);
+		centralwidget->setCurrentIndex(tabIndex);
+	}
+}
+
+void MainWindow::updateRecentFilesMenu()
+{
+	QSettings settings;
+	QStringList files = settings.value(
+		Settings::RecentFiles
+	).toStringList();
+
+	// Remove non-existing files or duplicates if any
+	QStringList cleanFiles;
+	for (const QString & filePath : files)
+	{
+		if (QFileInfo::exists(filePath) && !cleanFiles.contains(filePath))
+		{
+			cleanFiles.append(filePath);
+		}
+	}
+	if (cleanFiles.size() != files.size())
+	{
+		settings.setValue(
+			Settings::RecentFiles,
+			cleanFiles
+		);
+	}
+
+	// Remove previously added recent file actions from menu_File
+	for (QAction * action : menu_File->actions())
+	{
+		if (action->property("recentFile").isValid())
+		{
+			menu_File->removeAction(action);
+			delete action;
+		}
+	}
+
+	if (!cleanFiles.isEmpty())
+	{
+		auto * separator = new QAction(menu_File);
+		separator->setSeparator(true);
+		separator->setProperty("recentFile", true);
+		menu_File->addAction(separator);
+
+		for (int i = 0; i < cleanFiles.size(); ++i)
+		{
+			const QString & filePath = cleanFiles.at(i);
+			QString text = QString("&%1 %2").arg(
+				i + 1
+			).arg(
+				QFileInfo(filePath).fileName()
+			);
+			auto * action = new QAction(
+				text,
+				this
+			);
+			action->setData(filePath);
+			action->setProperty("recentFile", true);
+			action->setToolTip(filePath);
+			connect(
+				action,
+				&QAction::triggered,
+				this,
+				&MainWindow::openRecentFile
+			);
+			menu_File->addAction(action);
+		}
+	}
+}
+
+void MainWindow::addRecentFile(
+	const QString & fileName
+)
+{
+	QSettings settings;
+	QStringList files = settings.value(
+		Settings::RecentFiles
+	).toStringList();
+
+	files.removeAll(fileName);
+	files.prepend(fileName);
+
+	while (files.size() > MAX_RECENT_FILES)
+	{
+		files.removeLast();
+	}
+
+	settings.setValue(
+		Settings::RecentFiles,
+		files
+	);
+
+	updateRecentFilesMenu();
+}
+
+void MainWindow::openRecentFile()
+{
+	auto * action = qobject_cast<QAction *>(sender());
+	if (action != nullptr)
+	{
+		QString fileName = action->data().toString();
+		openFile(fileName);
 	}
 }
 

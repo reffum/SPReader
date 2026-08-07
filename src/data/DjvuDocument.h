@@ -8,6 +8,7 @@
 #include <QList>
 #include <QFuture>
 #include <libdjvu/ddjvuapi.h>
+#include <libdjvu/miniexp.h>
 
 struct DjvuOutlineItem
 {

@@ -5,6 +5,7 @@
 
 namespace Settings {
     const QString LastDir = QStringLiteral("lastDir");
+    const QString RecentFiles = QStringLiteral("recentFiles");
 }
 
 #endif // SPREADER_SETTINGS_KEYS_H
