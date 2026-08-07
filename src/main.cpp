@@ -2,10 +2,16 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
+	QApplication app(argc, argv);
+	QCoreApplication::setOrganizationName(
+		"ReffumComp"
+	);
+	QCoreApplication::setApplicationName(
+		"SPReader"
+	);
 
-    MainWindow mainWindow;
-    mainWindow.show();
+	MainWindow mainWindow;
+	mainWindow.show();
 
-    return QApplication::exec();
+	return QApplication::exec();
 }
