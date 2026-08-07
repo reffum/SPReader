@@ -52,14 +52,14 @@ MainWindow::MainWindow(QWidget *parent):
 		m_pageSpinBox,
 		SIGNAL(valueChanged(int)),
 		this,
-		SLOT(on_m_pageSpinBox_valueChanged(int))
+		SLOT(m_pageSpinBox_valueChanged(int))
 	);
 
 	connect(
 		m_zoomSpinBox,
 		SIGNAL(valueChanged(double)),
 		this,
-		SLOT(on_m_zoomSpinBox_valueChanged(double))
+		SLOT(m_zoomSpinBox_valueChanged(double))
 	);
 
 	centralwidget->setElideMode(Qt::ElideRight);
@@ -269,7 +269,7 @@ void MainWindow::on_actionPrev_page_triggered(bool checked) const
 	}
 }
 
-void MainWindow::on_m_pageSpinBox_valueChanged(int value) const
+void MainWindow::m_pageSpinBox_valueChanged(int value) const
 {
 	QPdfView * pdfView = currentPdfView();
 	if (pdfView == nullptr)
@@ -328,7 +328,7 @@ void MainWindow::on_actionZoom_Out_triggered(bool checked) const
 	}
 }
 
-void MainWindow::on_m_zoomSpinBox_valueChanged(double) const
+void MainWindow::m_zoomSpinBox_valueChanged(double) const
 {
 	QPdfView * pdfView = currentPdfView();
 	if (pdfView == nullptr)

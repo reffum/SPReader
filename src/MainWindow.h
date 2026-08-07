@@ -25,19 +25,26 @@ class MainWindow : public QMainWindow, Ui::MainWindow
 public:
 	explicit MainWindow(QWidget* parent = nullptr);
 private slots:
+	//
+	// Auto-connected slots
+	//
 	void on_action_Open_triggered(bool checked = false);
 	void on_actionAbout_triggered();
 	void on_contents_treeView_navigateToPage(int pageNumber) const;
 	void on_actionNext_page_triggered(bool checked = false) const;
 	void on_actionPrev_page_triggered(bool checked = false) const;
-	void on_m_pageSpinBox_valueChanged(int value) const;
 	void on_actionZoom_In_triggered(bool checked = false) const;
 	void on_actionZoom_Out_triggered(bool checked = false) const;
-	void on_m_zoomSpinBox_valueChanged(double) const;
-
-	void pageNavigator_currentPageChanged(int value) const;
 	void on_centralwidget_currentChanged(int index);
 	void on_centralwidget_tabCloseRequested(int index);
+
+	//
+	// Manually connected slots
+	//
+	void pageNavigator_currentPageChanged(int value) const;
+	void m_pageSpinBox_valueChanged(int value) const;
+	void m_zoomSpinBox_valueChanged(double) const;
+
 protected:
 	void resizeEvent(QResizeEvent * event) override;
 };
