@@ -10,6 +10,8 @@
 
 class QPdfDocument;
 class QPdfView;
+class DjvuDocument;
+class DjvuView;
 class QSpinBox;
 class QDoubleSpinBox;
 
@@ -22,6 +24,8 @@ class MainWindow : public QMainWindow, Ui::MainWindow
 
 	QPdfView * currentPdfView() const;
 	QPdfDocument * currentPdfDocument() const;
+	DjvuView * currentDjvuView() const;
+	DjvuDocument * currentDjvuDocument() const;
 public:
 	explicit MainWindow(QWidget* parent = nullptr);
 private slots:

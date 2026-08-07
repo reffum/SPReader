@@ -7,6 +7,7 @@
 #include <QHeaderView>
 
 #include "models/PdfContentsModel.h"
+#include "models/DjvuContentsModel.h"
 
 ContentsTreeView::ContentsTreeView(QWidget *parent):
 	QTreeView(parent)
@@ -23,6 +24,11 @@ void ContentsTreeView::setModel(QAbstractItemModel* model)
 {
 	QTreeView::setModel(model);
 
+	if (model == nullptr)
+	{
+		return;
+	}
+
 	QHeaderView * h = header();
 	h->setStretchLastSection(false);
 	h->setSectionResizeMode(PdfContentsModel::COLUMN_TITLE, QHeaderView::Stretch);
@@ -36,8 +42,18 @@ void ContentsTreeView::onItemDoubleClicked(const QModelIndex &index)
 		return;
 	}
 
-	PdfContentsModel * m = qobject_cast<PdfContentsModel*>(model());
+	int pageNumber = -1;
+	if (auto * pdfModel = qobject_cast<PdfContentsModel*>(model()))
+	{
+		pageNumber = pdfModel->getPageNumber(index);
+	}
+	else if (auto * djvuModel = qobject_cast<DjvuContentsModel*>(model()))
+	{
+		pageNumber = djvuModel->getPageNumber(index);
+	}
 
-	int pageNumber = m->getPageNumber(index);
-	emit navigateToPage(pageNumber);
+	if (pageNumber >= 0)
+	{
+		emit navigateToPage(pageNumber);
+	}
 }
