@@ -141,6 +141,7 @@ void MainWindow::on_action_Open_triggered(bool checked)
 			return;
 		}
 
+		// ReSharper disable once CppDFAMemoryLeak
 		auto * pdfView = new QPdfView(this);
 		pdfView->setDocument(pdfDocument);
 		pdfView->setPageMode(QPdfView::PageMode::MultiPage);
@@ -166,6 +167,9 @@ void MainWindow::on_action_Open_triggered(bool checked)
 
 void MainWindow::on_centralwidget_currentChanged(int index)
 {
+	QSignalBlocker blocker0(m_pageSpinBox);
+	QSignalBlocker blocker1(m_zoomSpinBox);
+
 	QPdfView * pdfView = currentPdfView();
 	QPdfDocument * pdfDocument = currentPdfDocument();
 
@@ -186,18 +190,11 @@ void MainWindow::on_centralwidget_currentChanged(int index)
 	m_pageSpinBox->setMaximum(pageCount);
 
 	int currentPage = pdfView->pageNavigator()->currentPage();
-	{
-		QSignalBlocker blocker(m_pageSpinBox);
-		m_pageSpinBox->setValue(currentPage);
-	}
-
-	{
-		QSignalBlocker blocker(m_zoomSpinBox);
-		m_zoomSpinBox->setValue(pdfView->zoomFactor() * 100);
-	}
+	m_pageSpinBox->setValue(currentPage);
+	m_zoomSpinBox->setValue(pdfView->zoomFactor() * 100);
 }
 
-void MainWindow::on_centralwidget_tabCloseRequested(int index)
+void MainWindow::on_centralwidget_tabCloseRequested(int index) const
 {
 	QWidget * widget = centralwidget->widget(index);
 	if (widget == nullptr)
