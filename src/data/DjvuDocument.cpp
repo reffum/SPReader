@@ -83,6 +83,41 @@ int DjvuDocument::pageCount() const
 	return m_pageCount;
 }
 
+QSize DjvuDocument::pageSize(int pageNumber) const
+{
+	if (m_document == nullptr || pageNumber < 0 || pageNumber >= m_pageCount)
+	{
+		return QSize(-1, -1);
+	}
+
+	ddjvu_page_t * page = ddjvu_page_create_by_pageno(
+		m_document,
+		pageNumber
+	);
+
+	if (page == nullptr)
+	{
+		return QSize(-1, -1);
+	}
+
+	while (!ddjvu_page_decoding_done(page))
+	{
+		handleEvents();
+	}
+
+	QSize size(-1, -1);
+	if (!ddjvu_page_decoding_error(page))
+	{
+		size = QSize(
+			ddjvu_page_get_width(page),
+			ddjvu_page_get_height(page)
+		);
+	}
+
+	ddjvu_page_release(page);
+	return size;
+}
+
 QFuture<QImage> DjvuDocument::renderPage(
 	int pageNumber,
 	double zoomFactor

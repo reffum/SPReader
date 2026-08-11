@@ -1,35 +1,41 @@
 //
 // DjvuView widget implementation
 //
-#include "DjvuView.h"
-#include <QVBoxLayout>
+
 #include <QScrollBar>
-#include <QSignalBlocker>
-#include <QFutureWatcher>
+#include <QPainter>
+#include <QPen>
+#include "DjvuView.h"
+
+// Offset the top page from the top
+constexpr int yTopVerticalOffset = 20;
+constexpr int yPageInterval = 10;
+constexpr int xHorizontalOffset = 10;
+
+constexpr int VERTICAL_SCROLL_STEP = 20;
+
+using namespace std;
 
 DjvuView::DjvuView(QWidget * parent):
-	QScrollArea(parent)
+	QAbstractScrollArea(parent)
 {
-	m_containerWidget = new QWidget(this);
-	m_layout = new QVBoxLayout(m_containerWidget);
-	m_layout->setAlignment(Qt::AlignHCenter);
-	m_layout->setContentsMargins(10, 10, 10, 10);
-	m_layout->setSpacing(10);
-	m_containerWidget->setLayout(m_layout);
 
-	setWidget(m_containerWidget);
-	setWidgetResizable(true);
-	setAlignment(Qt::AlignCenter);
 }
 
-void DjvuView::clearPages()
+void DjvuView::recreatePages()
 {
-	m_pageLabels.clear();
-	QLayoutItem * item;
-	while ((item = m_layout->takeAt(0)) != nullptr)
+	// Store initial information about all pages.
+	// Set page coordinate to (0,0) and store width and height
+	const int pagesCount = m_document->pageCount();
+	pages.clear();
+
+	for (int i = 0; i < pagesCount; ++i)
 	{
-		delete item->widget();
-		delete item;
+		QSize pageSize = m_document->pageSize(i) * m_zoomFactor;
+		QRect pageRect = QRect(QPoint{0,0}, pageSize);
+		Page page = Page{.rect = pageRect, .number = i};
+
+		pages.append(page);
 	}
 }
 
@@ -37,7 +43,11 @@ void DjvuView::setDocument(DjvuDocument * document)
 {
 	m_document = document;
 	m_currentPage = 0;
-	renderPages();
+
+	recreatePages();
+
+	rearrangePages();
+	setupScrollBars();
 }
 
 DjvuDocument * DjvuView::document() const
@@ -52,18 +62,16 @@ int DjvuView::currentPage() const
 
 void DjvuView::setCurrentPage(int pageNumber)
 {
-	if (m_document == nullptr || pageNumber < 0 || pageNumber >= m_document->pageCount())
-	{
-		return;
-	}
+	assert(pageNumber < m_document->pageCount());
 
 	m_currentPage = pageNumber;
-	if (pageNumber < m_pageLabels.size() && m_pageLabels[pageNumber] != nullptr)
-	{
-		QLabel * target = m_pageLabels[pageNumber];
-		ensureWidgetVisible(target, 0, 10);
-	}
-	emit currentPageChanged(m_currentPage);
+
+	// Set vertical scroll bar. This force repaint
+	// viewport
+	Page & page = pages[pageNumber];
+	int yPage = page.rect.y();
+
+	verticalScrollBar()->setValue(yPage);
 }
 
 double DjvuView::zoomFactor() const
@@ -78,93 +86,188 @@ void DjvuView::setZoomFactor(double factor)
 		return;
 	}
 	m_zoomFactor = factor;
+
+	recreatePages();
+	rearrangePages();
+	setupScrollBars();
+
+	viewport()->update();
+}
+
+//
+// Return current viewport rect in the origin
+//
+QRect DjvuView::getViewportRect() const
+{
+	// The visible area top-left corner is defined by the scroll position
+	int x = horizontalScrollBar()->value();
+	int y = verticalScrollBar()->value();
+
+	// Visible area size matches the viewport widget size
+
+	return {
+		x,
+		y,
+		viewport()->width(),
+		viewport()->height()
+		};
+}
+
+//
+// Return the part of page rect that belongs to the viewport
+// Return:
+// QRect - part of page visible in viewport in page coord system
+// QPoint - coord of visible page's part in viewport coord system
+//
+optional<pair<QRect, QPoint>> DjvuView::visiblePageRect(
+	const QRect & viewportRect,
+	const QRect & pageRect)
+{
+	// Intersect the two rects in document coordinates
+	QRect visible = pageRect.intersected(viewportRect);
+
+	if (visible.isNull())
+	{
+		// The page is not visible at all
+		return nullopt;
+	}
+
+	// Position of the visible part in the viewport coordinate system
+	const QPoint viewportOffset = visible.topLeft() - viewportRect.topLeft();
+
+	// The visible part in the page's own coordinate system
+	visible.moveTopLeft(visible.topLeft() - pageRect.topLeft());
+
+	return pair<QRect, QPoint>{visible, viewportOffset};
+}
+
+void DjvuView::resizeEvent(QResizeEvent *event)
+{
+	QAbstractScrollArea::resizeEvent(event);
+	setupScrollBars();
+}
+
+void DjvuView::paintEvent(QPaintEvent *event)
+{
 	renderPages();
 }
 
+//
+// Set pages (x,y) in origin space.
+//
+void DjvuView::rearrangePages()
+{
+	// Place pages in 1 vertical column
+	int y = qRound(yTopVerticalOffset * m_zoomFactor);
+	int x = qRound(xHorizontalOffset * m_zoomFactor);
+
+	int maxPageWidth = 0;
+
+	for (Page& page: pages)
+	{
+		page.rect.moveTo(x, y);
+		int pageH = page.rect.height();
+
+		y += pageH + qRound(yPageInterval * m_zoomFactor);
+
+		maxPageWidth = std::max(page.rect.width(), maxPageWidth);
+	}
+
+	totalWidth = maxPageWidth + qRound(2*xHorizontalOffset* m_zoomFactor);
+	totalHeight = y;
+}
+
+//
+// Render visible pages in viewport
+//
+void DjvuView::renderPage(
+	QPainter& painter,
+	Page& page,
+	QRect pageRect,
+	QPoint pageOffset) const
+{
+	const int pageNumber = page.number;
+
+	// Render the page
+	if (page.image.isNull())
+	{
+		QFuture<QImage> future = m_document->renderPage(pageNumber, m_zoomFactor);
+		page.image = future.result();
+	}
+
+	const QImage & image = page.image;
+
+	if (image.isNull())
+	{
+		qWarning() << "DjvuView::renderPage(" << pageNumber << ") failed";
+		return;
+	}
+
+	painter.save();
+
+	painter.drawImage(pageOffset, image, pageRect);
+
+	// Render borderline around this page
+	QRect borderRect = QRect(pageOffset, pageRect.size());
+	painter.setPen(QPen(Qt::black, 1));
+	painter.setBrush(Qt::NoBrush);
+	painter.drawRect(borderRect);
+
+	painter.restore();
+}
+
+//
+// Redraw all pages
+//
 void DjvuView::renderPages()
 {
-	clearPages();
+	QPainter painter(viewport());
 
-	if (m_document == nullptr)
+	// Fill background
+	painter.fillRect(rect(), Qt::lightGray);
+
+	QRect viewportRect = getViewportRect();
+
+	QList<Page> visiblePages;
+
+	for (Page& page: pages)
 	{
-		return;
-	}
-
-	int count = m_document->pageCount();
-	for (int i = 0; i < count; ++i)
-	{
-		// ReSharper disable once CppDFAMemoryLeak
-		auto * label = new QLabel(m_containerWidget);
-		label->setAlignment(Qt::AlignCenter);
-		m_layout->addWidget(label);
-		m_pageLabels.append(label);
-
-		auto * watcher = new QFutureWatcher<QImage>(label);
-		connect(
-			watcher,
-			&QFutureWatcher<QImage>::finished,
-			this,
-			[label, watcher]()
-			{
-				QImage img = watcher->result();
-				if (!img.isNull())
-				{
-					label->setPixmap(QPixmap::fromImage(img));
-				}
-				watcher->deleteLater();
-			}
-		);
-		watcher->setFuture(m_document->renderPage(i, m_zoomFactor));
-	}
-
-	if (m_currentPage >= count)
-	{
-		m_currentPage = 0;
-	}
-}
-
-void DjvuView::scrollContentsBy(
-	int dx,
-	int dy
-)
-{
-	QScrollArea::scrollContentsBy(dx, dy);
-	updateCurrentPageFromScroll();
-}
-
-void DjvuView::updateCurrentPageFromScroll()
-{
-	if (m_pageLabels.isEmpty())
-	{
-		return;
-	}
-
-	int viewportCenterY = viewport()->rect().center().y();
-
-	int bestPage = m_currentPage;
-	int minDistance = std::numeric_limits<int>::max();
-
-	for (int i = 0; i < m_pageLabels.size(); ++i)
-	{
-		QLabel * label = m_pageLabels[i];
-		QRect rect = label->geometry();
-		QRect mappedRect = QRect(
-			label->mapTo(viewport(), QPoint(0, 0)),
-			rect.size()
-		);
-
-		int labelCenterY = mappedRect.center().y();
-		int distance = std::abs(labelCenterY - viewportCenterY);
-		if (distance < minDistance)
+		QRect pageRect = page.rect;
+		auto pageParameters = visiblePageRect(
+			viewportRect,
+			pageRect
+			);
+		if (pageParameters.has_value())
 		{
-			minDistance = distance;
-			bestPage = i;
+			auto [pagePartRect, pageOffset] = pageParameters.value();
+			renderPage(painter, page, pagePartRect, pageOffset);
+
+			visiblePages.append(page);
 		}
 	}
 
-	if (bestPage != m_currentPage)
+	// Set number of the top visible page as a new current page
+	// and emit currentPageChanged
+	if (!visiblePages.isEmpty())
 	{
-		m_currentPage = bestPage;
-		emit currentPageChanged(m_currentPage);
+		const Page& currentPage = visiblePages.front();
+		m_currentPage = currentPage.number;
+		emit(currentPageChanged(m_currentPage));
 	}
+}
+
+void DjvuView::setupScrollBars() const
+{
+	int viewportHeight = viewport()->height();
+	int viewportWidth = viewport()->width();
+
+	int rangeHeight = std::max(0, totalHeight - viewportHeight);
+	int rangeWidth = std::max(0, totalWidth - viewportWidth);
+
+	verticalScrollBar()->setRange(0, rangeHeight);
+	verticalScrollBar()->setPageStep(viewportHeight);
+	verticalScrollBar()->setSingleStep(VERTICAL_SCROLL_STEP);
+
+	horizontalScrollBar()->setRange(0, rangeWidth);
+	horizontalScrollBar()->setPageStep(viewportWidth);
 }

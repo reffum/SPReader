@@ -38,6 +38,8 @@ add_executable(SPReader
     resources.qrc
 )
 
+add_subdirectory(test)
+
 qt6_add_ui(SPReader
     SOURCES ui/mainwindow.ui
     INCLUDE_PREFIX ui/

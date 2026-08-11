@@ -6,6 +6,7 @@
 
 #include <QImage>
 #include <QList>
+#include <QSize>
 #include <QFuture>
 #include <libdjvu/ddjvuapi.h>
 #include <libdjvu/miniexp.h>
@@ -41,6 +42,7 @@ public:
 		int pageNumber,
 		double zoomFactor = 1.0
 	) const;
+	[[nodiscard]] QSize pageSize(int pageNumber) const;
 	[[nodiscard]] QList<DjvuOutlineItem> outline();
 };
 
