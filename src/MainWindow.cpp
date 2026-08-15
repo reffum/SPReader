@@ -20,6 +20,8 @@
 #include "models/DjvuContentsModel.h"
 #include "widgets/DjvuView.h"
 
+using namespace std;
+
 constexpr double CONTENTS_DOCKWIDGET_PART = 0.3;
 constexpr double DEFAULT_ZOOM_FACTOR = 1.0;
 constexpr double MAXIMUM_ZOOM_FACTOR = 5.0;
@@ -380,88 +382,62 @@ void MainWindow::saveDocumentState(
 	QWidget * widget
 ) const
 {
-	if (widget == nullptr)
-	{
-		return;
-	}
+	QString filePath = widget->property("filePath").toString();
 
-	QString filePath =
-		widget->property("filePath").toString();
-	if (filePath.isEmpty())
-	{
-		return;
-	}
+	int page;
+	double zoom;
 
-	int page = 0;
-	double zoom = 1.0;
-
-	if (
-		auto * djvuView =
-			dynamic_cast<DjvuView *>(widget)
-	)
+	if (auto * djvuView = dynamic_cast<DjvuView *>(widget))
 	{
 		page = djvuView->currentPage();
 		zoom = djvuView->zoomFactor();
 	}
-	else if (
-		auto * pdfView =
-			dynamic_cast<QPdfView *>(widget)
-	)
+	else if (auto * pdfView = dynamic_cast<QPdfView *>(widget))
 	{
-		page =
-			pdfView->pageNavigator()->currentPage();
+		page = pdfView->pageNavigator()->currentPage();
 		zoom = pdfView->zoomFactor();
 	}
 	else
 	{
-		return;
+		assert(false);
 	}
 
-	SettingsManager::saveDocumentState(
-		filePath,
-		page,
-		zoom
-	);
+	SettingsManager::setLastPage(filePath, page);
+	SettingsManager::setZoom(filePath, zoom);
 }
 
-void MainWindow::restoreDocumentState(
-	const QString & fileName,
-	QWidget * widget
-) const
+void MainWindow::restoreDocumentState(const QString & fileName,QWidget * widget) const
 {
-	if (widget == nullptr || fileName.isEmpty())
-	{
-		return;
-	}
+	optional<int> lastPage = SettingsManager::getLastPage(fileName);
+	optional<double> zoom = SettingsManager::getZoom(fileName);
 
-	int page = 0;
-	double zoom = 1.0;
-	bool restored =
-		SettingsManager::restoreDocumentState(
-			fileName,
-			page,
-			zoom
-		);
-	if (!restored)
-	{
-		return;
-	}
 
-	if (
-		auto * djvuView =
-			dynamic_cast<DjvuView *>(widget)
-	)
+	if (auto * djvuView = dynamic_cast<DjvuView*>(widget))
 	{
-		djvuView->setZoomFactor(zoom);
-		djvuView->setCurrentPage(page);
+		if (lastPage.has_value())
+		{
+			djvuView->setCurrentPage(lastPage.value());
+		}
+
+		if (zoom.has_value())
+		{
+			djvuView->setZoomFactor(zoom.value());
+		}
 	}
-	else if (
-		auto * pdfView =
-			dynamic_cast<QPdfView *>(widget)
-	)
+	else
 	{
-		pdfView->setZoomFactor(zoom);
-		pdfView->pageNavigator()->jump(page, {});
+		auto * pdfView = dynamic_cast<QPdfView *>(widget);
+		assert(pdfView);
+
+		if (lastPage.has_value())
+		{
+			pdfView->pageNavigator()->jump(lastPage.value(), {});
+		}
+
+		if (zoom.has_value())
+		{
+			pdfView->setZoomFactor(zoom.value());
+		}
 	}
 }
 

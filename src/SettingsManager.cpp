@@ -5,17 +5,58 @@
 
 constexpr int MAX_RECENT_FILES = 10;
 
+using namespace std;
+
+
+template <typename T>
+void setSetting(const QString & filePath, const QString groupName, T value)
+{
+	QSettings settings;
+
+	settings.beginGroup(groupName);
+	settings.setValue(filePath, value);
+	settings.endGroup();
+}
+
+template<typename T>
+optional<T> getSetting(const QString& filePath, const QString& groupName)
+{
+	QSettings settings;
+
+	settings.beginGroup(groupName);
+	const bool hasValue = settings.contains(filePath);
+	const QVariant value = settings.value(filePath, groupName);
+	settings.endGroup();
+
+	if (!hasValue)
+	{
+		return nullopt;
+	}
+
+	if constexpr (std::is_same_v<T, QString>)
+	{
+		return value.toString();
+	}
+	else if constexpr (std::is_same_v<T, int>)
+	{
+		return value.toInt();
+	}
+	else if constexpr (std::is_same_v<T, double>)
+	{
+		return value.toDouble();
+	}
+
+	return nullopt;
+}
+
 QString SettingsManager::getLastDir()
 {
 	QSettings settings;
-	settings.beginGroup(
-		Settings::GeneralGroup
-	);
-	QString lastDir = settings.value(
-		Settings::LastDir,
-		QString()
-	).toString();
+
+	settings.beginGroup(Settings::GeneralGroup);
+	QString lastDir = settings.value(Settings::LastDir,QString()).toString();
 	settings.endGroup();
+
 	return lastDir;
 }
 
@@ -24,31 +65,21 @@ void SettingsManager::setLastDir(
 )
 {
 	QSettings settings;
-	settings.beginGroup(
-		Settings::GeneralGroup
-	);
-	settings.setValue(
-		Settings::LastDir,
-		dir
-	);
+	settings.beginGroup(Settings::GeneralGroup);
+	settings.setValue(Settings::LastDir,dir);
 	settings.endGroup();
 }
 
 QStringList SettingsManager::getRecentFiles()
 {
 	QSettings settings;
-	settings.beginGroup(
-		Settings::RecentFilesGroup
-	);
-	QStringList files = settings.value(
-		Settings::FilesList
-	).toStringList();
+	settings.beginGroup(Settings::RecentFilesGroup);
+	QStringList files = settings.value(Settings::FilesList).toStringList();
 
 	QStringList cleanFiles;
 	for (const QString & filePath : files)
 	{
-		bool exists =
-			QFileInfo::exists(filePath);
+		bool exists = QFileInfo::exists(filePath);
 		if (exists && !cleanFiles.contains(filePath))
 		{
 			cleanFiles.append(filePath);
@@ -56,10 +87,7 @@ QStringList SettingsManager::getRecentFiles()
 	}
 	if (cleanFiles.size() != files.size())
 	{
-		settings.setValue(
-			Settings::FilesList,
-			cleanFiles
-		);
+		settings.setValue(Settings::FilesList,cleanFiles);
 	}
 	settings.endGroup();
 	return cleanFiles;
@@ -70,12 +98,8 @@ void SettingsManager::addRecentFile(
 )
 {
 	QSettings settings;
-	settings.beginGroup(
-		Settings::RecentFilesGroup
-	);
-	QStringList files = settings.value(
-		Settings::FilesList
-	).toStringList();
+	settings.beginGroup(Settings::RecentFilesGroup);
+	QStringList files = settings.value(Settings::FilesList).toStringList();
 
 	files.removeAll(fileName);
 	files.prepend(fileName);
@@ -85,10 +109,7 @@ void SettingsManager::addRecentFile(
 		files.removeLast();
 	}
 
-	settings.setValue(
-		Settings::FilesList,
-		files
-	);
+	settings.setValue(Settings::FilesList,files);
 	settings.endGroup();
 }
 
@@ -97,82 +118,27 @@ void SettingsManager::setRecentFiles(
 )
 {
 	QSettings settings;
-	settings.beginGroup(
-		Settings::RecentFilesGroup
-	);
-	settings.setValue(
-		Settings::FilesList,
-		files
-	);
+	settings.beginGroup(Settings::RecentFilesGroup);
+	settings.setValue(Settings::FilesList,files);
 	settings.endGroup();
 }
 
-void SettingsManager::saveDocumentState(
-	const QString & filePath,
-	int page,
-	double zoom
-)
+void SettingsManager::setLastPage(const QString& filePath, int pageNumber)
 {
-	if (filePath.isEmpty())
-	{
-		return;
-	}
-
-	QSettings settings;
-	settings.beginGroup(
-		Settings::LastPageGroup
-	);
-	settings.setValue(
-		filePath,
-		page
-	);
-	settings.endGroup();
-
-	settings.beginGroup(
-		Settings::ZoomGroup
-	);
-	settings.setValue(
-		filePath,
-		zoom
-	);
-	settings.endGroup();
+	setSetting(filePath, Settings::LastPageGroup, pageNumber);
 }
 
-bool SettingsManager::restoreDocumentState(
-	const QString & filePath,
-	int & page,
-	double & zoom
-)
+optional<int> SettingsManager::getLastPage(const QString & filePath)
 {
-	if (filePath.isEmpty())
-	{
-		return false;
-	}
+	return getSetting<int>(filePath, Settings::LastPageGroup);
+}
 
-	QSettings settings;
-	settings.beginGroup(
-		Settings::LastPageGroup
-	);
-	if (!settings.contains(filePath))
-	{
-		settings.endGroup();
-		return false;
-	}
+void SettingsManager::setZoom(const QString& filePath, double zoom)
+{
+	setSetting(filePath, Settings::ZoomGroup, zoom);
+}
 
-	page = settings.value(
-		filePath,
-		0
-	).toInt();
-	settings.endGroup();
-
-	settings.beginGroup(
-		Settings::ZoomGroup
-	);
-	zoom = settings.value(
-		filePath,
-		1.0
-	).toDouble();
-	settings.endGroup();
-
-	return true;
+optional<double> SettingsManager::getZoom(const QString & filePath)
+{
+	return getSetting<double>(filePath, Settings::ZoomGroup);
 }
