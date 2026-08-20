@@ -9,7 +9,7 @@ license=('GPL3')
 depends=('qt6-base' 'qt6-webengine')
 makedepends=('cmake' 'git')
 options=('strip')
-source=("${pkgname}::git+https://github.com/reffum/SPReader.git")
+source=("${pkgname}::git+https://github.com/reffum/SPReader.git#tag=v${pkgver}")
 md5sums=('SKIP')
 
 build() {
