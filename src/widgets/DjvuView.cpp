@@ -5,6 +5,7 @@
 #include <QScrollBar>
 #include <QPainter>
 #include <QPen>
+#include <QFutureWatcher>
 #include "DjvuView.h"
 
 // Offset the top page from the top
@@ -28,6 +29,7 @@ void DjvuView::recreatePages()
 	// Set page coordinate to (0,0) and store width and height
 	const int pagesCount = m_document->pageCount();
 	pages.clear();
+	++m_renderGeneration;
 
 	for (int i = 0; i < pagesCount; ++i)
 	{
@@ -184,24 +186,55 @@ void DjvuView::renderPage(
 	QPainter& painter,
 	Page& page,
 	QRect pageRect,
-	QPoint pageOffset) const
+	QPoint pageOffset
+)
 {
 	const int pageNumber = page.number;
 
 	// Render the page
 	if (page.image.isNull())
 	{
-		QFuture<QImage> future = m_document->renderPage(pageNumber, m_zoomFactor);
-		page.image = future.result();
+		if (!page.isRendering)
+		{
+			page.isRendering = true;
+			const int generation = m_renderGeneration;
+			auto * watcher = new QFutureWatcher<QImage>(this);
+
+			connect(
+				watcher,
+				&QFutureWatcher<QImage>::finished,
+				this,
+				[this, watcher, pageNumber, generation]()
+				{
+					if (generation == m_renderGeneration && pageNumber < pages.size())
+					{
+						pages[pageNumber].image = watcher->result();
+						pages[pageNumber].isRendering = false;
+						viewport()->update();
+					}
+					watcher->deleteLater();
+				}
+			);
+
+			watcher->setFuture(m_document->renderPage(
+				pageNumber,
+				m_zoomFactor
+			));
+		}
+
+		painter.save();
+
+		QRect borderRect = QRect(pageOffset, pageRect.size());
+		painter.fillRect(borderRect, Qt::white);
+		painter.setPen(QPen(Qt::black, 1));
+		painter.setBrush(Qt::NoBrush);
+		painter.drawRect(borderRect);
+
+		painter.restore();
+		return;
 	}
 
 	const QImage & image = page.image;
-
-	if (image.isNull())
-	{
-		qWarning() << "DjvuView::renderPage(" << pageNumber << ") failed";
-		return;
-	}
 
 	painter.save();
 

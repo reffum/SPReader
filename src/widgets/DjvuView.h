@@ -23,12 +23,14 @@ class DjvuView : public QAbstractScrollArea
 		QRect rect;
 		int number{0};
 		QImage image;
+		bool isRendering{false};
 	};
 
 	DjvuDocument * m_document{nullptr};
 
 	int m_currentPage{0};
 	double m_zoomFactor{1.0};
+	int m_renderGeneration{0};
 
 	QList<Page> pages;
 
@@ -71,7 +73,12 @@ private:
 	void recreatePages();
 	void rearrangePages();
 	void setupScrollBars() const;
-	void renderPage(QPainter& painter, Page& page, QRect pageRect, QPoint pageOffset) const;
+	void renderPage(
+		QPainter& painter,
+		Page& page,
+		QRect pageRect,
+		QPoint pageOffset
+	);
 	void renderPages();
 };
 
