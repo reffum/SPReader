@@ -65,4 +65,4 @@ target_include_directories(SPReader PRIVATE
 
 install(TARGETS SPReader DESTINATION bin)
 install(FILES resources/spreader.desktop DESTINATION share/applications)
-install(FILES resources/icon.svg DESTINATION share/icons/hicolor/scalable/apps RENAME spreader.svg)
+install(FILES resources/app.svg DESTINATION share/icons/hicolor/scalable/apps RENAME spreader.svg)

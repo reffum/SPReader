@@ -36,7 +36,7 @@ MainWindow::MainWindow(
 	setupUi(this);
 
 	setWindowIcon(
-		QIcon(":/resources/icon.svg")
+		QIcon(":/resources/app.svg")
 	);
 
 	updateRecentFilesMenu();
@@ -141,7 +141,7 @@ MainWindow::currentDjvuDocument() const
 	return djvuView->document();
 }
 
-void MainWindow::on_actionAbout_triggered()
+void MainWindow::on_actionAbout_triggered(bool checked)
 {
 	QMessageBox::about(
 		this,
