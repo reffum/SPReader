@@ -280,12 +280,15 @@ void DjvuView::renderPages()
 	}
 
 	// Set number of the top visible page as a new current page
-	// and emit currentPageChanged
+	// and emit currentPageChanged if it has changed
 	if (!visiblePages.isEmpty())
 	{
-		const Page& currentPage = visiblePages.front();
-		m_currentPage = currentPage.number;
-		emit(currentPageChanged(m_currentPage));
+		const int newCurrentPage = visiblePages.front().number;
+		if (m_currentPage != newCurrentPage)
+		{
+			m_currentPage = newCurrentPage;
+			emit currentPageChanged(m_currentPage);
+		}
 	}
 }
 
