@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
     <file>resources/app.svg</file>
+    <file>resources/hand.png</file>
 </qresource>
 </RCC>

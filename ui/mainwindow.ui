@@ -14,7 +14,7 @@
    <string>SPReader</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../resources.qrc">
+   <iconset>
     <normaloff>:/resources/icon.svg</normaloff>:/resources/icon.svg</iconset>
   </property>
   <widget class="QTabWidget" name="centralwidget">
@@ -57,9 +57,16 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionHand_Tool"/>
+   </widget>
    <addaction name="menu_File"/>
    <addaction name="menuNavigation"/>
    <addaction name="menuView"/>
+   <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -79,6 +86,8 @@
    <addaction name="actionNext_page"/>
    <addaction name="actionZoom_In"/>
    <addaction name="actionZoom_Out"/>
+   <addaction name="separator"/>
+   <addaction name="actionHand_Tool"/>
   </widget>
   <widget class="QDockWidget" name="contents_dockWidget">
    <property name="windowTitle">
@@ -134,6 +143,21 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionHand_Tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/resources/hand.png</normaloff>:/resources/hand.png</iconset>
+   </property>
+   <property name="text">
+    <string>Hand Tool</string>
    </property>
   </action>
  </widget>

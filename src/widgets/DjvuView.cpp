@@ -18,7 +18,7 @@ constexpr int VERTICAL_SCROLL_STEP = 20;
 using namespace std;
 
 DjvuView::DjvuView(QWidget * parent):
-	QAbstractScrollArea(parent)
+	DraggableScrollArea(parent)
 {
 
 }

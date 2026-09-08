@@ -9,9 +9,10 @@
 #include <utility>
 
 #include "data/DjvuDocument.h"
+#include "DraggableScrollArea.h"
 
 
-class DjvuView : public QAbstractScrollArea
+class DjvuView : public DraggableScrollArea
 {
 	Q_OBJECT
 

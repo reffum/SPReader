@@ -35,6 +35,8 @@ add_executable(SPReader
         src/widgets/ContentsTreeView.h
         src/widgets/DjvuView.h
         src/widgets/DjvuView.cpp
+        src/widgets/DraggableScrollArea.h
+        src/widgets/DraggableScrollArea.cpp
     resources.qrc
 )
 
