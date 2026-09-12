@@ -6,6 +6,7 @@ PDF/DJVU/FB file reader.
 
 ## Development rules
 - Build project only after implicit ask
+- Don't see test/ 
 
 ### Split long lines(if line is longer than 100 symbols)
 - Every function parameter on new line
