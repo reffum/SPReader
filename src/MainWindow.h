@@ -9,7 +9,7 @@
 #include "ui/ui_mainwindow.h"
 
 class QPdfDocument;
-class QPdfView;
+class PdfView;
 class DjvuDocument;
 class DjvuView;
 class QSpinBox;
@@ -24,7 +24,7 @@ class MainWindow :
 	QSpinBox * m_pageSpinBox;
 	QDoubleSpinBox * m_zoomSpinBox;
 
-	QPdfView * currentPdfView() const;
+	PdfView * currentPdfView() const;
 	QPdfDocument * currentPdfDocument() const;
 	DjvuView * currentDjvuView() const;
 	DjvuDocument * currentDjvuDocument() const;

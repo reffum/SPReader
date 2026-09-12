@@ -38,6 +38,8 @@ add_executable(SPReader
         src/widgets/DraggableScrollArea.h
         src/widgets/DraggableScrollArea.cpp
     resources.qrc
+        src/widgets/PdfView.cpp
+        src/widgets/PdfView.h
 )
 
 add_subdirectory(test)

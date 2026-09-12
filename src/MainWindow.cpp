@@ -9,7 +9,6 @@
 #include <QSettings>
 #include <QDir>
 #include <QPdfDocument>
-#include <QPdfView>
 #include <QPdfPageNavigator>
 #include <QMessageBox>
 #include <QSpinBox>
@@ -19,6 +18,7 @@
 #include "data/DjvuDocument.h"
 #include "models/DjvuContentsModel.h"
 #include "widgets/DjvuView.h"
+#include "widgets/PdfView.h"
 
 using namespace std;
 
@@ -97,7 +97,7 @@ MainWindow::MainWindow(
 	);
 }
 
-QPdfView * MainWindow::currentPdfView() const
+PdfView * MainWindow::currentPdfView() const
 {
 	QWidget * currentWidget =
 		centralwidget->currentWidget();
@@ -105,13 +105,13 @@ QPdfView * MainWindow::currentPdfView() const
 	{
 		return nullptr;
 	}
-	return dynamic_cast<QPdfView *>(currentWidget);
+	return dynamic_cast<PdfView *>(currentWidget);
 }
 
 QPdfDocument *
 MainWindow::currentPdfDocument() const
 {
-	QPdfView * pdfView = currentPdfView();
+	PdfView * pdfView = currentPdfView();
 	if (pdfView == nullptr)
 	{
 		return nullptr;
@@ -276,10 +276,10 @@ void MainWindow::openFile(
 		}
 
 		// ReSharper disable once CppDFAMemoryLeak
-		auto * pdfView = new QPdfView(this);
+		auto * pdfView = new PdfView(this);
 		pdfView->setDocument(pdfDocument);
 		pdfView->setPageMode(
-			QPdfView::PageMode::MultiPage
+			PdfView::PageMode::MultiPage
 		);
 
 		connect(
@@ -392,7 +392,7 @@ void MainWindow::saveDocumentState(
 		page = djvuView->currentPage();
 		zoom = djvuView->zoomFactor();
 	}
-	else if (auto * pdfView = dynamic_cast<QPdfView *>(widget))
+	else if (auto * pdfView = dynamic_cast<PdfView *>(widget))
 	{
 		page = pdfView->pageNavigator()->currentPage();
 		zoom = pdfView->zoomFactor();
@@ -426,7 +426,7 @@ void MainWindow::restoreDocumentState(const QString & fileName,QWidget * widget)
 	}
 	else
 	{
-		auto * pdfView = dynamic_cast<QPdfView *>(widget);
+		auto * pdfView = dynamic_cast<PdfView *>(widget);
 		assert(pdfView);
 
 		if (lastPage.has_value())
@@ -448,7 +448,7 @@ void MainWindow::on_centralwidget_currentChanged(
 	QSignalBlocker blocker0(m_pageSpinBox);
 	QSignalBlocker blocker1(m_zoomSpinBox);
 
-	QPdfView * pdfView = currentPdfView();
+	PdfView * pdfView = currentPdfView();
 	QPdfDocument * pdfDocument =
 		currentPdfDocument();
 	DjvuView * djvuView = currentDjvuView();
@@ -521,7 +521,7 @@ MainWindow::on_centralwidget_tabCloseRequested(
 	saveDocumentState(widget);
 
 	auto * pdfView =
-		dynamic_cast<QPdfView *>(widget);
+		dynamic_cast<PdfView *>(widget);
 	if (pdfView != nullptr)
 	{
 		QPdfDocument * pdfDocument =
@@ -563,7 +563,7 @@ MainWindow::on_contents_treeView_navigateToPage(
 		return;
 	}
 
-	QPdfView * pdfView = currentPdfView();
+	PdfView * pdfView = currentPdfView();
 	if (pdfView == nullptr)
 	{
 		return;
@@ -592,7 +592,7 @@ void MainWindow::on_actionNext_page_triggered(
 		return;
 	}
 
-	QPdfView * pdfView = currentPdfView();
+	PdfView * pdfView = currentPdfView();
 	if (pdfView == nullptr)
 	{
 		return;
@@ -626,7 +626,7 @@ void MainWindow::on_actionPrev_page_triggered(
 		return;
 	}
 
-	QPdfView * pdfView = currentPdfView();
+	PdfView * pdfView = currentPdfView();
 	if (pdfView == nullptr)
 	{
 		return;
@@ -654,7 +654,7 @@ void MainWindow::m_pageSpinBox_valueChanged(
 		return;
 	}
 
-	QPdfView * pdfView = currentPdfView();
+	PdfView * pdfView = currentPdfView();
 	if (pdfView == nullptr)
 	{
 		return;
@@ -687,7 +687,7 @@ void MainWindow::pageNavigator_currentPageChanged(
 		dynamic_cast<QPdfPageNavigator *>(
 			sender()
 		);
-	QPdfView * pdfView = currentPdfView();
+	PdfView * pdfView = currentPdfView();
 	if (
 		pdfView != nullptr &&
 		senderNavigator == pdfView->pageNavigator()
@@ -716,7 +716,7 @@ void MainWindow::on_actionZoom_In_triggered(
 		return;
 	}
 
-	QPdfView * pdfView = currentPdfView();
+	PdfView * pdfView = currentPdfView();
 	if (pdfView == nullptr)
 	{
 		return;
@@ -749,7 +749,7 @@ void MainWindow::on_actionZoom_Out_triggered(
 		return;
 	}
 
-	QPdfView * pdfView = currentPdfView();
+	PdfView * pdfView = currentPdfView();
 	if (pdfView == nullptr)
 	{
 		return;
@@ -779,7 +779,7 @@ void MainWindow::m_zoomSpinBox_valueChanged(
 		return;
 	}
 
-	QPdfView * pdfView = currentPdfView();
+	PdfView * pdfView = currentPdfView();
 	if (pdfView == nullptr)
 	{
 		return;
