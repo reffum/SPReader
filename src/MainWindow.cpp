@@ -548,6 +548,11 @@ MainWindow::on_centralwidget_tabCloseRequested(
 	delete widget;
 }
 
+void MainWindow::on_actionContents_triggered(bool checked) const
+{
+	this->contents_dockWidget->setVisible(checked);
+}
+
 void
 MainWindow::on_contents_treeView_navigateToPage(
 	int pageNumber

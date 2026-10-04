@@ -52,6 +52,7 @@ private slots:
 	void on_actionZoom_Out_triggered(bool checked = false) const;
 	void on_centralwidget_currentChanged(int index);
 	void on_centralwidget_tabCloseRequested(int index) const;
+	void on_actionContents_triggered(bool checked = false) const;
 
 	//
 	// Manually connected slots
