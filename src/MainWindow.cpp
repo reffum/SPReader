@@ -28,9 +28,7 @@ constexpr double MAXIMUM_ZOOM_FACTOR = 5.0;
 constexpr double ZOOM_FACTOR_STEP = 0.25;
 constexpr int MAX_RECENT_FILES = 10;
 
-MainWindow::MainWindow(
-	QWidget * parent
-):
+MainWindow::MainWindow(QWidget * parent):
 	QMainWindow(parent)
 {
 	setupUi(this);
@@ -157,8 +155,7 @@ void MainWindow::on_action_Open_triggered(
 	bool checked
 )
 {
-	QString lastDir =
-		SettingsManager::getLastDir();
+	QString lastDir = SettingsManager::getLastDir();
 	if (lastDir.isEmpty())
 	{
 		lastDir = QDir::homePath();
@@ -441,19 +438,15 @@ void MainWindow::restoreDocumentState(const QString & fileName,QWidget * widget)
 	}
 }
 
-void MainWindow::on_centralwidget_currentChanged(
-	int index
-)
+void MainWindow::on_centralwidget_currentChanged(int index)
 {
 	QSignalBlocker blocker0(m_pageSpinBox);
 	QSignalBlocker blocker1(m_zoomSpinBox);
 
 	PdfView * pdfView = currentPdfView();
-	QPdfDocument * pdfDocument =
-		currentPdfDocument();
+	QPdfDocument * pdfDocument = currentPdfDocument();
 	DjvuView * djvuView = currentDjvuView();
-	DjvuDocument * djvuDocument =
-		currentDjvuDocument();
+	DjvuDocument * djvuDocument = currentDjvuDocument();
 
 	if (
 		djvuView != nullptr &&
@@ -483,8 +476,7 @@ void MainWindow::on_centralwidget_currentChanged(
 		pdfDocument != nullptr
 	)
 	{
-		auto * contentsModel =
-			new PdfContentsModel(this);
+		auto * contentsModel = new PdfContentsModel(this);
 		contentsModel->setDocument(pdfDocument);
 		contents_treeView->setModel(contentsModel);
 
@@ -493,8 +485,7 @@ void MainWindow::on_centralwidget_currentChanged(
 			pageCount > 0 ? pageCount - 1 : 0
 		);
 
-		int currentPage =
-			pdfView->pageNavigator()->currentPage();
+		int currentPage = pdfView->pageNavigator()->currentPage();
 		m_pageSpinBox->setValue(currentPage);
 		m_zoomSpinBox->setValue(
 			pdfView->zoomFactor() * 100
@@ -507,10 +498,7 @@ void MainWindow::on_centralwidget_currentChanged(
 	m_pageSpinBox->setValue(0);
 }
 
-void
-MainWindow::on_centralwidget_tabCloseRequested(
-	int index
-) const
+void MainWindow::on_centralwidget_tabCloseRequested(int index) const
 {
 	QWidget * widget = centralwidget->widget(index);
 	if (widget == nullptr)
