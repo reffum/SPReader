@@ -24,12 +24,13 @@ class MainWindow :
 	QSpinBox * m_pageSpinBox;
 	QDoubleSpinBox * m_zoomSpinBox;
 
-	void openFile(const QString & fileName);
 	void updateRecentFilesMenu();
 	void addRecentFile(const QString & fileName);
 	void setCurrentDocumentPage(int pageNumber) const;
 public:
 	explicit MainWindow(QWidget * parent = nullptr);
+
+	void openFile(const QString & fileName);
 private slots:
 	//
 	// Auto-connected slots

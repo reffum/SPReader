@@ -5,9 +5,10 @@
 #ifndef SPREADER_CONSTANTS_H
 #define SPREADER_CONSTANTS_H
 #include <qnamespace.h>
+#include <QString>
 
-constexpr std::string ORGANIZATION_NAME = "ReffumComp";
-constexpr std::string APPLICATION_NAME = "SPReader";
+const QString ORGANIZATION_NAME = "ReffumComp";
+const QString APPLICATION_NAME = "SPReader";
 
 //
 // Columns in contents and bookmarks tree view
