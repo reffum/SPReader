@@ -6,6 +6,8 @@
 #define SPREADER_CONSTANTS_H
 #include <qnamespace.h>
 
+constexpr std::string ORGANIZATION_NAME = "ReffumComp";
+constexpr std::string APPLICATION_NAME = "SPReader";
 
 //
 // Columns in contents and bookmarks tree view
