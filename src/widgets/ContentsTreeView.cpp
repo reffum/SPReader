@@ -1,13 +1,11 @@
 //
 // Created by oleg on 8/4/26.
 //
-
-#include "ContentsTreeView.h"
-
 #include <QHeaderView>
 
-#include "models/PdfContentsModel.h"
-#include "models/DjvuContentsModel.h"
+#include "constants.h"
+
+#include "ContentsTreeView.h"
 
 ContentsTreeView::ContentsTreeView(QWidget *parent):
 	QTreeView(parent)
@@ -31,8 +29,8 @@ void ContentsTreeView::setModel(QAbstractItemModel* model)
 
 	QHeaderView * h = header();
 	h->setStretchLastSection(false);
-	h->setSectionResizeMode(PdfContentsModel::COLUMN_TITLE, QHeaderView::Stretch);
-	resizeColumnToContents(PdfContentsModel::COLUMN_PAGE);
+	h->setSectionResizeMode(COLUMN_TITLE, QHeaderView::Stretch);
+	resizeColumnToContents(COLUMN_PAGE);
 }
 
 void ContentsTreeView::onItemDoubleClicked(const QModelIndex &index)
@@ -42,18 +40,6 @@ void ContentsTreeView::onItemDoubleClicked(const QModelIndex &index)
 		return;
 	}
 
-	int pageNumber = -1;
-	if (auto * pdfModel = qobject_cast<PdfContentsModel*>(model()))
-	{
-		pageNumber = pdfModel->getPageNumber(index);
-	}
-	else if (auto * djvuModel = qobject_cast<DjvuContentsModel*>(model()))
-	{
-		pageNumber = djvuModel->getPageNumber(index);
-	}
-
-	if (pageNumber >= 0)
-	{
-		emit navigateToPage(pageNumber);
-	}
+	int pageNumber = model()->data(index, PAGE_NUMBER_DATA_ROLE).toInt();
+	emit navigateToPage(pageNumber);
 }

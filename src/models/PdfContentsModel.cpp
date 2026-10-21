@@ -3,6 +3,7 @@
 //
 
 #include "PdfContentsModel.h"
+#include "constants.h"
 
 const QList<QString> ContentsHeaders = {"Title", "Page"};
 
@@ -39,10 +40,10 @@ QVariant PdfContentsModel::data(
 		{
 			return QPdfBookmarkModel::data(
 				index,
-				static_cast<int>(QPdfBookmarkModel::Role::Title)
+				static_cast<int>(Role::Title)
 			);
 		}
-		else if (column == COLUMN_PAGE)
+		if (column == COLUMN_PAGE)
 		{
 			return QPdfBookmarkModel::data(
 				index,
@@ -50,14 +51,14 @@ QVariant PdfContentsModel::data(
 			);
 		}
 	}
-	return QPdfBookmarkModel::data(index, role);
-}
+	else if (role == PAGE_NUMBER_DATA_ROLE)
+	{
+		QVariant value = QPdfBookmarkModel::data(
+			index,
+			static_cast<int>(Role::Page)
+		);
+		return value.toInt();
+	}
 
-int PdfContentsModel::getPageNumber(const QModelIndex & index) const
-{
-	QVariant value = QPdfBookmarkModel::data(
-		index,
-		static_cast<int>(QPdfBookmarkModel::Role::Page)
-	);
-	return value.toInt();
+	return QPdfBookmarkModel::data(index, role);
 }

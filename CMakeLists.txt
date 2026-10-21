@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find Qt6 or Qt5 components
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Gui Widgets PdfWidgets Concurrent)
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Core Gui Widgets PdfWidgets Concurrent)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets PdfWidgets Concurrent)
 
 find_package(PkgConfig REQUIRED)
@@ -21,7 +21,26 @@ set(CMAKE_AUTORCC ON)
 # Find UI and form wrapper tools
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
+# Find the uic executable
+get_target_property(_uic_executable Qt6::uic IMPORTED_LOCATION)
+
+# Function or macro to process a UI file
+function(generate_ui_header ui_file header_file)
+	add_custom_command(
+			OUTPUT ${header_file}
+			COMMAND ${_uic_executable} -o ${header_file} ${ui_file}
+			DEPENDS ${ui_file}
+			COMMENT "Generating ${header_file} from ${ui_file}"
+			VERBATIM
+	)
+endfunction()
+
+generate_ui_header("${CMAKE_CURRENT_SOURCE_DIR}/src/ui/mainwindow.ui" "${CMAKE_CURRENT_SOURCE_DIR}/src/ui/ui_mainwindow.h")
+
 add_executable(SPReader
+	src/ui/mainwindow.ui
+	src/ui/ui_mainwindow.h
+
 	src/main.cpp
 	src/MainWindow.cpp
 	src/SettingsManager.h
@@ -45,7 +64,11 @@ add_executable(SPReader
 	src/widgets/DocumentWidget.cpp
 	src/widgets/PdfWidget.h
 	src/widgets/PdfWidget.cpp
+	src/constants.h
+		src/widgets/DjvuWidget.cpp
+		src/widgets/DjvuWidget.h
 )
+
 
 add_subdirectory(test)
 

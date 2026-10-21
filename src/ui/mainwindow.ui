@@ -14,10 +14,10 @@
    <string>SPReader</string>
   </property>
   <property name="windowIcon">
-   <iconset>
-    <normaloff>:/resources/icon.svg</normaloff>:/resources/icon.svg</iconset>
+   <iconset resource="../../resources.qrc">
+    <normaloff>:/resources/app.svg</normaloff>:/resources/app.svg</iconset>
   </property>
-  <widget class="QTabWidget" name="centralwidget">
+  <widget class="QTabWidget" name="centralTab">
    <property name="tabsClosable">
     <bool>true</bool>
    </property>
@@ -155,7 +155,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources.qrc">
+    <iconset resource="../../resources.qrc">
      <normaloff>:/resources/hand.png</normaloff>:/resources/hand.png</iconset>
    </property>
    <property name="text">
@@ -194,7 +194,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../resources.qrc"/>
+  <include location="../../resources.qrc"/>
  </resources>
  <connections/>
 </ui>

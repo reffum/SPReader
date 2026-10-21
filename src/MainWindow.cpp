@@ -8,17 +8,13 @@
 #include <QDebug>
 #include <QSettings>
 #include <QDir>
-#include <QPdfDocument>
 #include <QPdfPageNavigator>
 #include <QMessageBox>
 #include <QSpinBox>
-#include <QIcon>
 
-#include "models/PdfContentsModel.h"
 #include "data/DjvuDocument.h"
 #include "models/DjvuContentsModel.h"
-#include "widgets/DjvuView.h"
-#include "widgets/PdfView.h"
+#include "widgets/DocumentWidget.h"
 
 using namespace std;
 
@@ -33,12 +29,9 @@ MainWindow::MainWindow(QWidget * parent):
 {
 	setupUi(this);
 
-	setWindowIcon(
-		QIcon(":/resources/app.svg")
-	);
-
 	updateRecentFilesMenu();
 
+	// Setup contents QDockWidget parameters
 	int contents_dockWidgetSize = static_cast<int>(
 		width() * CONTENTS_DOCKWIDGET_PART
 	);
@@ -46,14 +39,16 @@ MainWindow::MainWindow(QWidget * parent):
 		{ contents_dockWidget } ,
 		{ contents_dockWidgetSize } ,
 		Qt::Horizontal
-		);
+	);
 
+	// Add pages spin box
 	m_pageSpinBox = new QSpinBox(this);
 	toolBar->insertWidget(
 		actionNext_page,
 		m_pageSpinBox
 	);
 
+	// Add zoom spin box
 	m_zoomSpinBox = new QDoubleSpinBox(this);
 	toolBar->insertWidget(
 		actionZoom_Out,
@@ -86,223 +81,49 @@ MainWindow::MainWindow(QWidget * parent):
 		SLOT(m_zoomSpinBox_valueChanged(double))
 	);
 
-	centralwidget->setElideMode(Qt::ElideRight);
+	// Setup maximum width of tab title
+	centralTab->setElideMode(Qt::ElideRight);
 
-	centralwidget->setStyleSheet(
+	centralTab->setStyleSheet(
 		"QTabBar::tab { max-width: " +
-		QString::number(centralwidget->width() / 3) +
+		QString::number(centralTab->width() / 3) +
 		"px; }"
 	);
 }
 
-PdfView * MainWindow::currentPdfView() const
-{
-	QWidget * currentWidget =
-		centralwidget->currentWidget();
-	if (currentWidget == nullptr)
-	{
-		return nullptr;
-	}
-	return dynamic_cast<PdfView *>(currentWidget);
-}
 
-QPdfDocument *
-MainWindow::currentPdfDocument() const
+void MainWindow::openFile(const QString & fileName)
 {
-	PdfView * pdfView = currentPdfView();
-	if (pdfView == nullptr)
+	try
 	{
-		return nullptr;
-	}
-	return pdfView->document();
-}
+		DocumentWidget* widget = DocumentWidget::openDocument(fileName);
 
-DjvuView * MainWindow::currentDjvuView() const
-{
-	QWidget * currentWidget =
-		centralwidget->currentWidget();
-	if (currentWidget == nullptr)
-	{
-		return nullptr;
-	}
-	return dynamic_cast<DjvuView *>(currentWidget);
-}
-
-DjvuDocument *
-MainWindow::currentDjvuDocument() const
-{
-	DjvuView * djvuView = currentDjvuView();
-	if (djvuView == nullptr)
-	{
-		return nullptr;
-	}
-	return djvuView->document();
-}
-
-void MainWindow::on_actionAbout_triggered(bool checked)
-{
-	QMessageBox::about(
-		this,
-		tr("About SPReader"),
-		tr("SPReader\n"
-		   "PDF/DJVU/FB file reader.\n\n"
-		   "Version: ") +
-		QString(PROJECT_VERSION)
-	);
-}
-
-void MainWindow::on_action_Open_triggered(
-	bool checked
-)
-{
-	QString lastDir = SettingsManager::getLastDir();
-	if (lastDir.isEmpty())
-	{
-		lastDir = QDir::homePath();
-	}
-
-	QString fileName = QFileDialog::getOpenFileName(
-		this,
-		tr("Open Document"),
-		lastDir,
-		tr(
-			"Supported Files (*.pdf *.djvu *.djv);;"
-			"PDF Files (*.pdf);;"
-			"DjVu Files (*.djvu *.djv)"
-		)
-	);
-	if (!fileName.isEmpty())
-	{
-		openFile(fileName);
-	}
-}
-
-void MainWindow::openFile(
-	const QString & fileName
-)
-{
-	QFileInfo checkFile(fileName);
-	if (!checkFile.exists() || !checkFile.isFile())
-	{
-		qWarning() <<
-			"File does not exist:" <<
-			fileName;
-		QMessageBox::critical(
-			this,
-			tr("Error"),
-			tr("File does not exist: %1").arg(fileName)
+		// Add new document
+		const int tabIndex = centralTab->addTab(
+			widget,
+			widget->getFileName()
 		);
-		return;
-	}
 
-	SettingsManager::setLastDir(
-		checkFile.absolutePath()
-	);
-
-	addRecentFile(checkFile.absoluteFilePath());
-
-	QString suffix = checkFile.suffix().toLower();
-	if (suffix == "djvu" || suffix == "djv")
-	{
-		auto * djvuDocument = new DjvuDocument(this);
-		if (djvuDocument->load(fileName))
-		{
-			qInfo() << "DjVu file loaded:" << fileName;
-		}
-		else
-		{
-			qCritical() <<
-				"DjVu file load failed:" <<
-				fileName;
-			QMessageBox::critical(
-				this,
-				tr("Error"),
-				tr("File open error")
-			);
-			delete djvuDocument;
-			return;
-		}
-
-		auto * djvuView = new DjvuView(this);
-		djvuView->setDocument(djvuDocument);
+		centralTab->setTabToolTip(tabIndex, widget->getFullFileName());
+		centralTab->setCurrentIndex(tabIndex);
 
 		connect(
-			djvuView,
-			&DjvuView::currentPageChanged,
-			this,
-			&MainWindow::pageNavigator_currentPageChanged
-		);
-
-		int tabIndex = centralwidget->addTab(
-			djvuView,
-			checkFile.fileName()
-		);
-		centralwidget->setTabToolTip(
-			tabIndex,
-			checkFile.fileName()
-		);
-		djvuView->setProperty(
-			"filePath",
-			checkFile.absoluteFilePath()
-		);
-		restoreDocumentState(
-			checkFile.absoluteFilePath(),
-			djvuView
-		);
-		centralwidget->setCurrentIndex(tabIndex);
-	}
-	else
-	{
-		auto * pdfDocument = new QPdfDocument(this);
-		QPdfDocument::Error r =
-			pdfDocument->load(fileName);
-		if (r == QPdfDocument::Error::None)
-		{
-			qInfo() << "PDF file loaded:" << fileName;
-		}
-		else
-		{
-			qCritical() << "PDF file load failed:" << r;
-			QMessageBox::critical(
-				this,
-				tr("Error"),
-				tr("File open error")
-			);
-			delete pdfDocument;
-			return;
-		}
-
-		// ReSharper disable once CppDFAMemoryLeak
-		auto * pdfView = new PdfView(this);
-		pdfView->setDocument(pdfDocument);
-		pdfView->setPageMode(
-			PdfView::PageMode::MultiPage
-		);
-
-		connect(
-			pdfView->pageNavigator(),
+			widget,
 			SIGNAL(currentPageChanged(int)),
 			this,
-			SLOT(pageNavigator_currentPageChanged(int))
+			SLOT(currentDocument_currentPageChanged(int))
 		);
 
-		int tabIndex = centralwidget->addTab(
-			pdfView,
-			checkFile.fileName()
+		connect(
+			widget,
+			SIGNAL(zoomChanged(qreal)),
+			this,
+			SLOT(currentDocument_zoomChanged(qreal))
 		);
-		centralwidget->setTabToolTip(
-			tabIndex,
-			checkFile.fileName()
-		);
-		pdfView->setProperty(
-			"filePath",
-			checkFile.absoluteFilePath()
-		);
-		restoreDocumentState(
-			checkFile.absoluteFilePath(),
-			pdfView
-		);
-		centralwidget->setCurrentIndex(tabIndex);
+	}
+	catch (OpenDocumentError & e)
+	{
+		QMessageBox::critical(this, "Open document error", e.what());
 	}
 }
 
@@ -348,7 +169,7 @@ void MainWindow::updateRecentFilesMenu()
 				action,
 				&QAction::triggered,
 				this,
-				&MainWindow::openRecentFile
+				&MainWindow::openRecentFile_action_triggered
 			);
 			menu_File->addAction(action);
 		}
@@ -363,177 +184,143 @@ void MainWindow::addRecentFile(
 	updateRecentFilesMenu();
 }
 
-void MainWindow::openRecentFile()
+//
+// Auto-connected slots
+//
+
+void MainWindow::on_action_Open_triggered(bool)
 {
-	auto * action =
-		qobject_cast<QAction *>(sender());
-	if (action != nullptr)
+	QString lastDir = SettingsManager::getLastDir();
+	if (lastDir.isEmpty())
 	{
-		QString fileName =
-			action->data().toString();
+		lastDir = QDir::homePath();
+	}
+
+	QString fileName = QFileDialog::getOpenFileName(
+		this,
+		tr("Open Document"),
+		lastDir,
+		tr(
+			"Supported Files (*.pdf *.djvu *.djv);;"
+			"PDF Files (*.pdf);;"
+			"DjVu Files (*.djvu *.djv)"
+		)
+	);
+	if (!fileName.isEmpty())
+	{
 		openFile(fileName);
 	}
 }
 
-void MainWindow::saveDocumentState(
-	QWidget * widget
-) const
+void MainWindow::setCurrentDocumentPage(int pageNumber) const
 {
-	QString filePath = widget->property("filePath").toString();
+	QSignalBlocker blocker(m_pageSpinBox);
 
-	int page;
-	double zoom;
+	auto * documentWidget = qobject_cast<DocumentWidget *>(centralTab->currentWidget());
 
-	if (auto * djvuView = dynamic_cast<DjvuView *>(widget))
+	if (pageNumber >= documentWidget->getPageCount())
 	{
-		page = djvuView->currentPage();
-		zoom = djvuView->zoomFactor();
-	}
-	else if (auto * pdfView = dynamic_cast<PdfView *>(widget))
-	{
-		page = pdfView->pageNavigator()->currentPage();
-		zoom = pdfView->zoomFactor();
-	}
-	else
-	{
-		assert(false);
+		qWarning() << "Contents page number " << pageNumber << " is out of range("
+		<< documentWidget->getPageCount() << ")";
+
+		return;
 	}
 
-	SettingsManager::setLastPage(filePath, page);
-	SettingsManager::setZoom(filePath, zoom);
+	documentWidget->setCurrentPage(pageNumber);
+	m_pageSpinBox->setValue(pageNumber);
 }
 
-void MainWindow::restoreDocumentState(const QString & fileName,QWidget * widget) const
+void MainWindow::on_actionAbout_triggered(bool checked)
 {
-	optional<int> lastPage = SettingsManager::getLastPage(fileName);
-	optional<double> zoom = SettingsManager::getZoom(fileName);
-
-
-	if (auto * djvuView = dynamic_cast<DjvuView*>(widget))
-	{
-		if (lastPage.has_value())
-		{
-			djvuView->setCurrentPage(lastPage.value());
-		}
-
-		if (zoom.has_value())
-		{
-			djvuView->setZoomFactor(zoom.value());
-		}
-	}
-	else
-	{
-		auto * pdfView = dynamic_cast<PdfView *>(widget);
-		assert(pdfView);
-
-		if (lastPage.has_value())
-		{
-			pdfView->pageNavigator()->jump(lastPage.value(), {});
-		}
-
-		if (zoom.has_value())
-		{
-			pdfView->setZoomFactor(zoom.value());
-		}
-	}
+	QMessageBox::about(
+		this,
+		tr("About SPReader"),
+		tr("SPReader\n"
+		   "PDF/DJVU/FB file reader.\n\n"
+		   "Version: ") +
+		QString(PROJECT_VERSION)
+	);
 }
 
-void MainWindow::on_centralwidget_currentChanged(int index)
+void MainWindow::on_centralTab_currentChanged(int) const
 {
 	QSignalBlocker blocker0(m_pageSpinBox);
 	QSignalBlocker blocker1(m_zoomSpinBox);
 
-	PdfView * pdfView = currentPdfView();
-	QPdfDocument * pdfDocument = currentPdfDocument();
-	DjvuView * djvuView = currentDjvuView();
-	DjvuDocument * djvuDocument = currentDjvuDocument();
+	auto * documentWidget = qobject_cast<DocumentWidget *>(centralTab->currentWidget());
 
-	if (
-		djvuView != nullptr &&
-		djvuDocument != nullptr
-	)
-	{
-		auto * contentsModel =
-			new DjvuContentsModel(this);
-		contentsModel->setDocument(djvuDocument);
-		contents_treeView->setModel(contentsModel);
+	int currentPage = documentWidget->getCurrentPage();
+	int pageCount = documentWidget->getPageCount();
+	qreal zoomFactor = documentWidget->getZoomFactor();
 
-		int pageCount = djvuDocument->pageCount();
-		m_pageSpinBox->setMaximum(
-			pageCount > 0 ? pageCount - 1 : 0
-		);
+	QAbstractItemModel * contentsModel = documentWidget->contentsModel();
 
-		int currentPage = djvuView->currentPage();
-		m_pageSpinBox->setValue(currentPage);
-		m_zoomSpinBox->setValue(
-			djvuView->zoomFactor() * 100
-		);
-		return;
-	}
+	m_pageSpinBox->setMaximum(pageCount);
+	m_pageSpinBox->setValue(currentPage);
+	m_zoomSpinBox->setValue(zoomFactor);
 
-	if (
-		pdfView != nullptr &&
-		pdfDocument != nullptr
-	)
-	{
-		auto * contentsModel = new PdfContentsModel(this);
-		contentsModel->setDocument(pdfDocument);
-		contents_treeView->setModel(contentsModel);
-
-		int pageCount = pdfDocument->pageCount();
-		m_pageSpinBox->setMaximum(
-			pageCount > 0 ? pageCount - 1 : 0
-		);
-
-		int currentPage = pdfView->pageNavigator()->currentPage();
-		m_pageSpinBox->setValue(currentPage);
-		m_zoomSpinBox->setValue(
-			pdfView->zoomFactor() * 100
-		);
-		return;
-	}
-
-	contents_treeView->setModel(nullptr);
-	m_pageSpinBox->setMaximum(0);
-	m_pageSpinBox->setValue(0);
+	contents_treeView->setModel(contentsModel);
 }
 
-void MainWindow::on_centralwidget_tabCloseRequested(int index) const
+void MainWindow::on_contents_treeView_navigateToPage(int pageNumber) const
 {
-	QWidget * widget = centralwidget->widget(index);
-	if (widget == nullptr)
+	setCurrentDocumentPage(pageNumber);
+}
+
+void MainWindow::on_actionNext_page_triggered(bool) const
+{
+	int currentPage = m_pageSpinBox->value();
+
+	if (currentPage == m_pageSpinBox->maximum())
 	{
 		return;
 	}
 
-	saveDocumentState(widget);
+	setCurrentDocumentPage(currentPage + 1);
+}
 
-	auto * pdfView =
-		dynamic_cast<PdfView *>(widget);
-	if (pdfView != nullptr)
+void MainWindow::on_actionPrev_page_triggered(bool) const
+{
+	int currentPage = m_pageSpinBox->value();
+	if (currentPage == m_pageSpinBox->minimum())
 	{
-		QPdfDocument * pdfDocument =
-			pdfView->document();
-		if (pdfDocument != nullptr)
-		{
-			delete pdfDocument;
-		}
+		return;
 	}
 
-	auto * djvuView =
-		dynamic_cast<DjvuView *>(widget);
-	if (djvuView != nullptr)
-	{
-		DjvuDocument * djvuDocument =
-			djvuView->document();
-		if (djvuDocument != nullptr)
-		{
-			delete djvuDocument;
-		}
-	}
+	setCurrentDocumentPage(currentPage - 1);
+}
 
-	centralwidget->removeTab(index);
-	delete widget;
+void MainWindow::on_actionZoom_In_triggered(bool) const
+{
+	QSignalBlocker blocker(m_zoomSpinBox);
+
+	auto * documentWidget = qobject_cast<DocumentWidget *>(centralTab->currentWidget());
+	qreal zoomFactor = documentWidget->getZoomFactor() + ZOOM_FACTOR_STEP;
+	documentWidget->setZoomFactor(zoomFactor);
+
+	m_zoomSpinBox->setValue(zoomFactor * 100);
+}
+
+void MainWindow::on_actionZoom_Out_triggered(bool) const
+{
+	QSignalBlocker blocker(m_zoomSpinBox);
+
+	auto * documentWidget = qobject_cast<DocumentWidget *>(centralTab->currentWidget());
+	qreal zoomFactor = documentWidget->getZoomFactor() - ZOOM_FACTOR_STEP;
+
+	if (zoomFactor - ZOOM_FACTOR_STEP > 0.0)
+	{
+		documentWidget->setZoomFactor(zoomFactor);
+		m_zoomSpinBox->setValue(zoomFactor * 100);
+	}
+}
+
+void MainWindow::on_centralTab_tabCloseRequested(int index) const
+{
+	auto * documentWidget = qobject_cast<DocumentWidget *>(centralTab->currentWidget());
+	centralTab->removeTab(index);
+
+	delete documentWidget;
 }
 
 void MainWindow::on_actionContents_triggered(bool checked) const
@@ -541,261 +328,60 @@ void MainWindow::on_actionContents_triggered(bool checked) const
 	this->contents_dockWidget->setVisible(checked);
 }
 
-void
-MainWindow::on_contents_treeView_navigateToPage(
-	int pageNumber
-) const
+//
+// Manually connected slots
+//
+void MainWindow::currentDocument_currentPageChanged(int value) const
 {
 	QSignalBlocker blocker(m_pageSpinBox);
+	m_pageSpinBox->setValue(value);
+}
 
-	if (DjvuView * djvuView = currentDjvuView())
-	{
-		djvuView->setCurrentPage(pageNumber);
-		m_pageSpinBox->setValue(pageNumber);
-		saveDocumentState(djvuView);
-		return;
-	}
+void MainWindow::currentDocument_zoomChanged(qreal value) const
+{
+	QSignalBlocker blocker(m_zoomSpinBox);
+	m_zoomSpinBox->setValue(value);
+}
 
-	PdfView * pdfView = currentPdfView();
-	if (pdfView == nullptr)
-	{
-		return;
-	}
+void MainWindow::m_pageSpinBox_valueChanged(int value) const
+{
+	int pageNumber = value;
+	auto * documentWidget = qobject_cast<DocumentWidget *>(centralTab->currentWidget());
 
-	pdfView->pageNavigator()->jump(pageNumber, {});
+	assert(value <= documentWidget->getPageCount());
+
+	documentWidget->setCurrentPage(pageNumber);
 	m_pageSpinBox->setValue(pageNumber);
-	saveDocumentState(pdfView);
 }
 
-void MainWindow::on_actionNext_page_triggered(
-	bool checked
-) const
+void MainWindow::m_zoomSpinBox_valueChanged(double) const
 {
-	QSignalBlocker blocker(m_pageSpinBox);
+	double zoomFactor = m_zoomSpinBox->value() / 100.0;
 
-	if (DjvuView * djvuView = currentDjvuView())
-	{
-		int nextPage =
-			djvuView->currentPage() + 1;
-		djvuView->setCurrentPage(nextPage);
-		m_pageSpinBox->setValue(
-			djvuView->currentPage()
-		);
-		saveDocumentState(djvuView);
-		return;
-	}
-
-	PdfView * pdfView = currentPdfView();
-	if (pdfView == nullptr)
-	{
-		return;
-	}
-
-	QPdfPageNavigator * navigator =
-		pdfView->pageNavigator();
-	int nextPage = navigator->currentPage() + 1;
-	navigator->jump(nextPage, {});
-	m_pageSpinBox->setValue(nextPage);
-	saveDocumentState(pdfView);
+	auto * documentWidget = qobject_cast<DocumentWidget *>(centralTab->currentWidget());
+	documentWidget->setZoomFactor(zoomFactor);
 }
 
-void MainWindow::on_actionPrev_page_triggered(
-	bool checked
-) const
+void MainWindow::openRecentFile_action_triggered(bool)
 {
-	QSignalBlocker blocker(m_pageSpinBox);
-
-	if (DjvuView * djvuView = currentDjvuView())
+	auto * action = qobject_cast<QAction *>(sender());
+	if (action != nullptr)
 	{
-		int prevPage = djvuView->currentPage() - 1;
-		if (prevPage >= 0)
-		{
-			djvuView->setCurrentPage(prevPage);
-		m_pageSpinBox->setValue(
-			djvuView->currentPage()
-		);
-			saveDocumentState(djvuView);
-		}
-		return;
-	}
-
-	PdfView * pdfView = currentPdfView();
-	if (pdfView == nullptr)
-	{
-		return;
-	}
-
-	QPdfPageNavigator * navigator =
-		pdfView->pageNavigator();
-	int prevPage = navigator->currentPage() - 1;
-	if (prevPage >= 0)
-	{
-		navigator->jump(prevPage, {});
-		m_pageSpinBox->setValue(prevPage);
-		saveDocumentState(pdfView);
+		QString fileName = action->data().toString();
+		openFile(fileName);
 	}
 }
 
-void MainWindow::m_pageSpinBox_valueChanged(
-	int value
-) const
-{
-	if (DjvuView * djvuView = currentDjvuView())
-	{
-		djvuView->setCurrentPage(value);
-		saveDocumentState(djvuView);
-		return;
-	}
-
-	PdfView * pdfView = currentPdfView();
-	if (pdfView == nullptr)
-	{
-		return;
-	}
-
-	QPdfPageNavigator * navigator =
-		pdfView->pageNavigator();
-	navigator->jump(value, {});
-	saveDocumentState(pdfView);
-}
-
-void MainWindow::pageNavigator_currentPageChanged(
-	int value
-) const
-{
-	// Only update page spinbox if active
-	// tab triggered signal
-	if (DjvuView * djvuView = currentDjvuView())
-	{
-		if (sender() == djvuView)
-		{
-			QSignalBlocker blocker(m_pageSpinBox);
-			m_pageSpinBox->setValue(value);
-			saveDocumentState(djvuView);
-		}
-		return;
-	}
-
-	auto * senderNavigator =
-		dynamic_cast<QPdfPageNavigator *>(
-			sender()
-		);
-	PdfView * pdfView = currentPdfView();
-	if (
-		pdfView != nullptr &&
-		senderNavigator == pdfView->pageNavigator()
-	)
-	{
-		QSignalBlocker blocker(m_pageSpinBox);
-		m_pageSpinBox->setValue(value);
-		saveDocumentState(pdfView);
-	}
-}
-
-void MainWindow::on_actionZoom_In_triggered(
-	bool checked
-) const
-{
-	QSignalBlocker blocker(m_zoomSpinBox);
-
-	if (DjvuView * djvuView = currentDjvuView())
-	{
-		double zoomFactor =
-			djvuView->zoomFactor() +
-			ZOOM_FACTOR_STEP;
-		djvuView->setZoomFactor(zoomFactor);
-		m_zoomSpinBox->setValue(zoomFactor * 100);
-		saveDocumentState(djvuView);
-		return;
-	}
-
-	PdfView * pdfView = currentPdfView();
-	if (pdfView == nullptr)
-	{
-		return;
-	}
-
-	double zoomFactor = pdfView->zoomFactor();
-	zoomFactor += ZOOM_FACTOR_STEP;
-
-	pdfView->setZoomFactor(zoomFactor);
-	m_zoomSpinBox->setValue(zoomFactor * 100);
-	saveDocumentState(pdfView);
-}
-
-void MainWindow::on_actionZoom_Out_triggered(
-	bool checked
-) const
-{
-	QSignalBlocker blocker(m_zoomSpinBox);
-
-	if (DjvuView * djvuView = currentDjvuView())
-	{
-		double zoomFactor = djvuView->zoomFactor();
-		if (zoomFactor - ZOOM_FACTOR_STEP > 0.0)
-		{
-			zoomFactor -= ZOOM_FACTOR_STEP;
-			djvuView->setZoomFactor(zoomFactor);
-			m_zoomSpinBox->setValue(zoomFactor * 100);
-			saveDocumentState(djvuView);
-		}
-		return;
-	}
-
-	PdfView * pdfView = currentPdfView();
-	if (pdfView == nullptr)
-	{
-		return;
-	}
-
-	double zoomFactor = pdfView->zoomFactor();
-	if (zoomFactor - ZOOM_FACTOR_STEP > 0.0)
-	{
-		zoomFactor -= ZOOM_FACTOR_STEP;
-		pdfView->setZoomFactor(zoomFactor);
-		m_zoomSpinBox->setValue(zoomFactor * 100);
-		saveDocumentState(pdfView);
-	}
-}
-
-void MainWindow::m_zoomSpinBox_valueChanged(
-	double
-) const
-{
-	double zoomFactor =
-		m_zoomSpinBox->value() / 100.0;
-
-	if (DjvuView * djvuView = currentDjvuView())
-	{
-		djvuView->setZoomFactor(zoomFactor);
-		saveDocumentState(djvuView);
-		return;
-	}
-
-	PdfView * pdfView = currentPdfView();
-	if (pdfView == nullptr)
-	{
-		return;
-	}
-	pdfView->setZoomFactor(zoomFactor);
-	saveDocumentState(pdfView);
-}
+//
+// Events
+//
 
 void MainWindow::resizeEvent(QResizeEvent * event)
 {
 	QMainWindow::resizeEvent(event);
-	centralwidget->setStyleSheet(
+	centralTab->setStyleSheet(
 		"QTabBar::tab { max-width: " +
-		QString::number(centralwidget->width() / 4) +
+		QString::number(centralTab->width() / 4) +
 		"px; }"
 	);
-}
-
-void MainWindow::closeEvent(QCloseEvent * event)
-{
-	for (int i = 0; i < centralwidget->count(); ++i)
-	{
-		saveDocumentState(centralwidget->widget(i));
-	}
-	QMainWindow::closeEvent(event);
 }
