@@ -25,7 +25,6 @@ public:
 	void setCurrentPage(int page) override;
 
 	[[nodiscard]] QAbstractItemModel * contentsModel() const override;
-	[[nodiscard]] QAbstractItemModel * bookmarksModel() const override;
 
 private:
 	QPdfView* m_pdfView;

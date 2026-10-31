@@ -10,6 +10,7 @@ namespace Settings {
 	const QString FilesList = QStringLiteral("files");
 	const QString LastPageGroup = QStringLiteral("lastPage");
 	const QString ZoomGroup = QStringLiteral("zoom");
+	const QString BookmarksGroup = QStringLiteral("bookmarks");
 }
 
 #endif // SPREADER_SETTINGS_KEYS_H

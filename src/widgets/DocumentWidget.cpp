@@ -7,6 +7,8 @@
 
 #include "PdfWidget.h"
 #include "DjvuWidget.h"
+#include "SettingsManager.h"
+#include "models/BookmarksModel.h"
 
 DocumentWidget* DocumentWidget::openDocument(const QString &fileName)
 {
@@ -24,9 +26,23 @@ DocumentWidget* DocumentWidget::openDocument(const QString &fileName)
 }
 
 DocumentWidget::DocumentWidget(const QString& fileName, QWidget* parent):
-QWidget(parent),
-m_fullFileName(fileName)
+	QWidget(parent),
+	m_fullFileName(fileName)
 {
+	QString bookmarksFile = SettingsManager::getBookmarksFile(fileName);
+	m_bookmarksModel = new BookmarksModel(bookmarksFile);
+
+	connect(this, SIGNAL(currentPageChanged(int)), this, SLOT(on_currentPageChanged(int)));
+}
+
+void DocumentWidget::setCurrentPage(int page)
+{
+	m_bookmarksModel->setCurrentPage(page);
+}
+
+QAbstractItemModel * DocumentWidget::bookmarksModel() const
+{
+	return m_bookmarksModel;
 }
 
 QString DocumentWidget::getFileName() const
@@ -38,4 +54,9 @@ QString DocumentWidget::getFileName() const
 QString DocumentWidget::getFullFileName() const
 {
 	return m_fullFileName;
+}
+
+void DocumentWidget::on_currentPageChanged(int page) const
+{
+	m_bookmarksModel->setCurrentPage(page);
 }

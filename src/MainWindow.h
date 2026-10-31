@@ -45,6 +45,7 @@ private slots:
 	void on_actionZoom_Out_triggered(bool checked = false) const;
 	void on_centralTab_tabCloseRequested(int index) const;
 	void on_actionContents_triggered(bool checked = false) const;
+	void on_actionBookmarks_triggered(bool checked = false) const;
 
 	//
 	// Manually connected slots

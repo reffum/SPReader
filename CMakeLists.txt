@@ -51,6 +51,8 @@ add_executable(SPReader
 	src/data/DjvuDocument.cpp
 	src/models/DjvuContentsModel.h
 	src/models/DjvuContentsModel.cpp
+	src/models/BookmarksModel.h
+	src/models/BookmarksModel.cpp
 	src/widgets/ContentsTreeView.cpp
 	src/widgets/ContentsTreeView.h
 	src/widgets/DjvuView.h
@@ -65,12 +67,15 @@ add_executable(SPReader
 	src/widgets/PdfWidget.h
 	src/widgets/PdfWidget.cpp
 	src/constants.h
-		src/widgets/DjvuWidget.cpp
-		src/widgets/DjvuWidget.h
+	src/widgets/DjvuWidget.cpp
+	src/widgets/DjvuWidget.h
+	src/widgets/BookmarksTreeView.cpp
+	src/widgets/BookmarksTreeView.h
 )
 
 
 add_subdirectory(test)
+add_subdirectory(test/bookmarks)
 
 target_link_libraries(SPReader PRIVATE
 	Qt${QT_VERSION_MAJOR}::Core

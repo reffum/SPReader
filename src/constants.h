@@ -18,6 +18,12 @@ constexpr int COLUMN_COUNT = 2;
 constexpr int COLUMN_TITLE = 0;
 constexpr int COLUMN_PAGE = 1;
 
+//
+// Columns headers
+//
+const QString COLUMN_TITLE_HEADER = "Title";
+const QString COLUMN_PAGE_HEADER = "Page";
+
 // Data roles in bookmarks and contents tree models
 constexpr int PAGE_NUMBER_DATA_ROLE = Qt::UserRole + 1;
 

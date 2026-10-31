@@ -3,6 +3,12 @@
 
 #include <QStringList>
 
+class SettingsError: public std::runtime_error
+{
+public:
+	SettingsError(const QString & errorMessage) : std::runtime_error(errorMessage.toStdString()) {};
+};
+
 class SettingsManager
 {
 public:
@@ -19,6 +25,8 @@ public:
 
 	static void setZoom(const QString& filePath, double zoom);
 	static std::optional<double> getZoom(const QString & filePath);
+
+	static QString getBookmarksFile(const QString & filePath);
 };
 
 #endif // SPREADER_SETTINGSMANAGER_H

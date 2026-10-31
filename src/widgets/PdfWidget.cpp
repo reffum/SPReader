@@ -105,16 +105,11 @@ void PdfWidget::setZoomFactor(qreal zoom)
 
 void PdfWidget::setCurrentPage(int page)
 {
+	DocumentWidget::setCurrentPage(page);
 	m_pdfView->pageNavigator()->jump(page, {});
 }
 
 QAbstractItemModel * PdfWidget::contentsModel() const
 {
 	return m_pdfContentsModel;
-}
-
-QAbstractItemModel * PdfWidget::bookmarksModel() const
-{
-	//TODO: not implemented yet
-	return nullptr;
 }

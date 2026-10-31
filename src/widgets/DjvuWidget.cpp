@@ -88,16 +88,11 @@ void DjvuWidget::setZoomFactor(qreal zoom)
 
 void DjvuWidget::setCurrentPage(int page)
 {
+	DocumentWidget::setCurrentPage(page);
 	m_djvuView->setCurrentPage(page);
 }
 
 QAbstractItemModel * DjvuWidget::contentsModel() const
 {
 	return m_djvuContentsModel;
-}
-
-QAbstractItemModel * DjvuWidget::bookmarksModel() const
-{
-	//TODO: not implemented yet
-	return nullptr;
 }

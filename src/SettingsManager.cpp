@@ -1,7 +1,12 @@
 #include "SettingsManager.h"
+
+#include <qcryptographichash.h>
+#include <QDir>
+
 #include "settings_keys.h"
 #include <QFileInfo>
 #include <QSettings>
+#include <qstandardpaths.h>
 
 constexpr int MAX_RECENT_FILES = 10;
 
@@ -141,4 +146,57 @@ void SettingsManager::setZoom(const QString& filePath, double zoom)
 optional<double> SettingsManager::getZoom(const QString & filePath)
 {
 	return getSetting<double>(filePath, Settings::ZoomGroup);
+}
+
+// Return file path of file with bookmarks
+QString SettingsManager::getBookmarksFile(const QString & filePath)
+{
+	QSettings settings;
+	settings.beginGroup(Settings::BookmarksGroup);
+	QVariant value = settings.value(filePath);
+
+	//
+	// Generate new if there isn't the file.
+	// The name if <sanitized_stem>_<short_path_hash>.json
+	// sanitized_stem - STEM_SIZE left symbols of filePath
+	// short_path_hash - HASH_SIZE left of sha256 of fileName absolute path
+	//
+	if (!value.isValid())
+	{
+		constexpr int STEM_SIZE = 20;
+		constexpr int HASH_SIZE = 12;
+
+		QString baseDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+		QDir dir(baseDir + "/bookmarks");
+		if (!dir.exists())
+		{
+			bool r = dir.mkpath(".");
+			if (!r) qCritical() << QObject::tr("Cannot create directory \"") << baseDir;
+			throw SettingsError(QString("Can't create bookmarks directory: %1").arg(dir.absolutePath()));
+		}
+
+		QFileInfo fileInfo(filePath);
+		QByteArray hash = QCryptographicHash::hash(
+			fileInfo.canonicalFilePath().toUtf8(),
+			QCryptographicHash::Sha256
+			).toHex().left(HASH_SIZE);
+
+		QString safeFileName = fileInfo.completeBaseName().left(STEM_SIZE);
+		safeFileName.removeIf(
+			[](QChar c) {
+				return !c.isLetterOrNumber();
+			}
+		);
+
+		QString jsonFileName = QString("%1_%2.json").arg(safeFileName, QString::fromLatin1(hash));
+		QString fullJsonFileName = dir.filePath(jsonFileName);
+		settings.setValue(filePath, fullJsonFileName);
+
+		settings.endGroup();
+
+		return fullJsonFileName;
+	}
+
+	settings.endGroup();
+	return value.toString();
 }

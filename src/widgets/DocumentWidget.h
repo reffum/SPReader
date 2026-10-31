@@ -7,6 +7,8 @@
 #include <QAbstractItemModel>
 #include <qwidget.h>
 
+class BookmarksModel;
+
 class OpenDocumentError : public std::runtime_error
 {
 public:
@@ -30,11 +32,11 @@ public:
 	[[nodiscard]] virtual qreal getZoomFactor() const = 0;
 
 	virtual void setZoomFactor(qreal zoom) = 0;
-	virtual void setCurrentPage(int page) = 0;
+	virtual void setCurrentPage(int page);
 
 	[[nodiscard]] virtual QAbstractItemModel * contentsModel() const = 0;
-	[[nodiscard]] virtual QAbstractItemModel * bookmarksModel() const = 0;
 
+	[[nodiscard]] QAbstractItemModel * bookmarksModel() const;
 	[[nodiscard]] QString getFileName() const;
 	[[nodiscard]] QString getFullFileName() const;
 
@@ -46,6 +48,10 @@ protected:
 	DocumentWidget(const QString& fileName, QWidget* parent=nullptr);
 
 	QString m_fullFileName;
+	BookmarksModel* m_bookmarksModel;
+
+private slots:
+	void on_currentPageChanged(int page) const;
 };
 
 #endif //SPREADER_DOCUMENTWIDGET_H

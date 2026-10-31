@@ -29,6 +29,11 @@ MainWindow::MainWindow(QWidget * parent):
 {
 	setupUi(this);
 
+	tabifyDockWidget(
+		contents_dockWidget,
+		bookmarks_dockWidget
+	);
+
 	updateRecentFilesMenu();
 
 	// Setup contents QDockWidget parameters
@@ -260,6 +265,9 @@ void MainWindow::on_centralTab_currentChanged(int) const
 	m_zoomSpinBox->setValue(zoomFactor);
 
 	contents_treeView->setModel(contentsModel);
+
+	QAbstractItemModel * bookmarksModel = documentWidget->bookmarksModel();
+	bookmarsk_treeView->setModel(bookmarksModel);
 }
 
 void MainWindow::on_contents_treeView_navigateToPage(int pageNumber) const
@@ -326,6 +334,11 @@ void MainWindow::on_centralTab_tabCloseRequested(int index) const
 void MainWindow::on_actionContents_triggered(bool checked) const
 {
 	this->contents_dockWidget->setVisible(checked);
+}
+
+void MainWindow::on_actionBookmarks_triggered(bool checked) const
+{
+	this->bookmarks_dockWidget->setVisible(checked);
 }
 
 //
