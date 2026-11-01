@@ -1,12 +1,12 @@
 # Maintainer: Oleg <oleg@example.com>
 pkgname=spreader
-pkgver=0.5.0
+pkgver=0.5.1
 pkgrel=1
 pkgdesc="PDF/DJVU/FB file reader"
 arch=('x86_64')
 url="https://github.com/reffum/SPReader"
 license=('GPL3')
-depends=('qt6-base' 'qt6-webengine')
+depends=('qt6-base' 'qt6-webengine' 'djvulibre')
 makedepends=('cmake' 'git')
 options=('strip')
 source=("${pkgname}::git+https://github.com/reffum/SPReader.git#tag=v${pkgver}")
