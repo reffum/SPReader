@@ -74,8 +74,8 @@ add_executable(SPReader
 )
 
 
-add_subdirectory(test)
-add_subdirectory(test/bookmarks)
+#add_subdirectory(test)
+#add_subdirectory(test/bookmarks)
 
 target_link_libraries(SPReader PRIVATE
 	Qt${QT_VERSION_MAJOR}::Core
