@@ -16,6 +16,9 @@ public:
 	explicit DjvuWidget(const QString& fileName, QWidget* parent = nullptr);
 	~DjvuWidget() override;
 
+	void setMode(Mode mode) override;
+	Mode getMode() override;
+
 	[[nodiscard]] int getCurrentPage() const override;
 	[[nodiscard]] int getPageCount() const override;
 

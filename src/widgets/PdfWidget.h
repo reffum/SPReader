@@ -5,8 +5,8 @@
 #ifndef SPREADER_PDFWIDGET_H
 #define SPREADER_PDFWIDGET_H
 
-#include <QPdfView>
 #include "DocumentWidget.h"
+#include "PdfView.h"
 #include "models/PdfContentsModel.h"
 
 class PdfWidget: public DocumentWidget
@@ -15,6 +15,9 @@ class PdfWidget: public DocumentWidget
 public:
 	explicit PdfWidget(const QString& fileName, QWidget* parent = nullptr);
 	~PdfWidget() override;
+
+	void setMode(Mode mode) override;
+	Mode getMode() override;
 
 	[[nodiscard]] int getCurrentPage() const override;
 	[[nodiscard]] int getPageCount() const override;
@@ -26,8 +29,13 @@ public:
 
 	[[nodiscard]] QAbstractItemModel * contentsModel() const override;
 
+	void setMode(PdfView::Mode mode);
+	[[nodiscard]] PdfView::Mode mode() const;
+	void copySelectionToClipboard() const;
+	[[nodiscard]] PdfView * pdfView() const;
+
 private:
-	QPdfView* m_pdfView;
+	PdfView * m_pdfView;
 	PdfContentsModel * m_pdfContentsModel;
 };
 

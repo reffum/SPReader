@@ -2,5 +2,7 @@
 <qresource>
     <file>resources/app.svg</file>
     <file>resources/hand.png</file>
+    <file>resources/ibeam.svg</file>
+    <file>resources/select-image.svg</file>
 </qresource>
 </RCC>

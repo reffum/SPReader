@@ -83,6 +83,37 @@ PdfWidget::~PdfWidget()
 	SettingsManager::setZoom(m_fullFileName, zoom);
 }
 
+void PdfWidget::setMode(Mode mode)
+{
+	switch (mode)
+	{
+		case Mode::Hand:
+			m_pdfView->setMode(PdfView::Mode::Hand);
+			break;
+		case Mode::SelectText:
+			m_pdfView->setMode(PdfView::Mode::SelectText);
+			break;
+		case Mode::SelectImage:
+			m_pdfView->setMode(PdfView::Mode::SelectImage);
+			break;
+	}
+}
+
+DocumentWidget::Mode PdfWidget::getMode()
+{
+	switch (m_pdfView->mode())
+	{
+		case PdfView::Mode::Hand:
+			return Mode::Hand;
+		case PdfView::Mode::SelectText:
+			return Mode::SelectText;
+		case PdfView::Mode::SelectImage:
+			return Mode::SelectImage;
+		default:
+			assert(false);
+	}
+}
+
 int PdfWidget::getCurrentPage() const
 {
 	return m_pdfView->pageNavigator()->currentPage();
@@ -112,4 +143,24 @@ void PdfWidget::setCurrentPage(int page)
 QAbstractItemModel * PdfWidget::contentsModel() const
 {
 	return m_pdfContentsModel;
+}
+
+void PdfWidget::setMode(PdfView::Mode mode)
+{
+	m_pdfView->setMode(mode);
+}
+
+PdfView::Mode PdfWidget::mode() const
+{
+	return m_pdfView->mode();
+}
+
+void PdfWidget::copySelectionToClipboard() const
+{
+	m_pdfView->copySelectionToClipboard();
+}
+
+PdfView * PdfWidget::pdfView() const
+{
+	return m_pdfView;
 }

@@ -90,6 +90,8 @@
    <addaction name="actionZoom_Out"/>
    <addaction name="separator"/>
    <addaction name="actionHand_Tool"/>
+   <addaction name="actionISelectText_Tool"/>
+   <addaction name="actionSelectImge_Tool"/>
   </widget>
   <widget class="QDockWidget" name="contents_dockWidget">
    <property name="windowTitle">
@@ -191,6 +193,39 @@
    </property>
    <property name="text">
     <string>Bookmars</string>
+   </property>
+  </action>
+  <action name="actionISelectText_Tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../../resources.qrc">
+     <normaloff>:/resources/ibeam.svg</normaloff>:/resources/ibeam.svg</iconset>
+   </property>
+   <property name="text">
+    <string>IBeam Tool</string>
+   </property>
+   <property name="toolTip">
+    <string>Select Text Tool</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actionSelectImge_Tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../../resources.qrc">
+     <normaloff>:/resources/select-image.svg</normaloff>:/resources/select-image.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Select Imge</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

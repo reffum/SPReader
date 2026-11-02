@@ -2,6 +2,9 @@
 // The application main window
 //
 #include "MainWindow.h"
+
+#include <QActionGroup>
+
 #include "SettingsManager.h"
 #include <QFileDialog>
 #include <QFileInfo>
@@ -33,6 +36,11 @@ MainWindow::MainWindow(QWidget * parent):
 		contents_dockWidget,
 		bookmarks_dockWidget
 	);
+
+	m_toolsActionGroup = new QActionGroup(this);
+	m_toolsActionGroup->addAction(actionHand_Tool);
+	m_toolsActionGroup->addAction(actionISelectText_Tool);
+	m_toolsActionGroup->addAction(actionSelectImge_Tool);
 
 	updateRecentFilesMenu();
 
@@ -84,6 +92,13 @@ MainWindow::MainWindow(QWidget * parent):
 		SIGNAL(valueChanged(double)),
 		this,
 		SLOT(m_zoomSpinBox_valueChanged(double))
+	);
+
+	connect(
+		m_toolsActionGroup,
+		SIGNAL(triggered(QAction*)),
+		this,
+		SLOT(m_toolsActionGroup_triggered(QAction*))
 	);
 
 	// Setup maximum width of tab title
@@ -382,6 +397,23 @@ void MainWindow::openRecentFile_action_triggered(bool)
 	{
 		QString fileName = action->data().toString();
 		openFile(fileName);
+	}
+}
+
+void MainWindow::m_toolsActionGroup_triggered(QAction *action) const
+{
+	DocumentWidget * documentWidget = qobject_cast<DocumentWidget *>(centralTab->currentWidget());
+	if (action == actionHand_Tool)
+	{
+		documentWidget->setMode(DocumentWidget::Mode::Hand);
+	}
+	else if (action == actionISelectText_Tool)
+	{
+		documentWidget->setMode(DocumentWidget::Mode::SelectText);
+	}
+	else
+	{
+		documentWidget->setMode(DocumentWidget::Mode::SelectImage);
 	}
 }
 

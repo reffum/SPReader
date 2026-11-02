@@ -23,6 +23,7 @@ class MainWindow :
 
 	QSpinBox * m_pageSpinBox;
 	QDoubleSpinBox * m_zoomSpinBox;
+	QActionGroup * m_toolsActionGroup;
 
 	void updateRecentFilesMenu();
 	void addRecentFile(const QString & fileName);
@@ -55,6 +56,7 @@ private slots:
 	void m_pageSpinBox_valueChanged(int value) const;
 	void m_zoomSpinBox_valueChanged(double) const;
 	void openRecentFile_action_triggered(bool checked = false);
+	void m_toolsActionGroup_triggered(QAction *action) const;
 
 protected:
 	void resizeEvent(QResizeEvent * event) override;

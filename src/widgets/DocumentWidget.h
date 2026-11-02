@@ -25,7 +25,17 @@ class DocumentWidget: public QWidget
 	Q_OBJECT
 
 public:
+	enum class Mode
+	{
+		Hand,
+		SelectText,
+		SelectImage
+	};
+
 	static DocumentWidget* openDocument(const QString &fileName);
+
+	virtual void setMode(Mode mode) = 0;
+	[[nodiscard]] virtual Mode getMode() = 0;
 
 	[[nodiscard]] virtual int getCurrentPage() const = 0;
 	[[nodiscard]] virtual int getPageCount() const = 0;

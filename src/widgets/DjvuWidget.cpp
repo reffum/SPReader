@@ -66,6 +66,17 @@ DjvuWidget::~DjvuWidget()
 	SettingsManager::setZoom(m_fullFileName, zoom);
 }
 
+void DjvuWidget::setMode(Mode mode)
+{
+	//TODO: Not implement yet
+}
+
+DjvuWidget::Mode DjvuWidget::getMode()
+{
+	//TODO: Not implement yet
+	return Mode::Hand;
+}
+
 int DjvuWidget::getCurrentPage() const
 {
 	return m_djvuView->currentPage();
